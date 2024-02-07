@@ -1,0 +1,43 @@
+{
+  "name": "spe-spas-backend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev:server": "ts-node ./src/index.ts",
+    "dev:worker": "ts-node ./src/index-worker.ts",
+    "dev": "concurrently npm:dev:*",
+    "build": "tsc",
+    "start:server": "node ./dist/index.js",
+    "start:worker": "node ./dist/index-worker.js",
+    "start": "concurrently npm:start:*",
+    "migration:generate": "ts-node migration generate",
+    "migration:run": "ts-node migration run",
+    "migration:revert": "ts-node migration revert"
+  },
+  "dependencies": {
+    "@denz93/vendure-plugin-simple-auth": "^1.3.1",
+    "@nestjs/mapped-types": "^2.0.4",
+    "@nestjs/platform-express": "^10.3.1",
+    "@vendure/admin-ui-plugin": "2.1.6",
+    "@vendure/asset-server-plugin": "2.1.6",
+    "@vendure/core": "2.1.6",
+    "@vendure/email-plugin": "2.1.6",
+    "axios": "^1.6.7",
+    "better-sqlite3": "8.7.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "dotenv": "16.4.0",
+    "google-auth-library": "^9.6.1",
+    "graphql-tag": "^2.12.6",
+    "jsonwebtoken": "^9.0.2",
+    "typescript": "4.9.5",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/uuid": "^9.0.8",
+    "concurrently": "8.2.2",
+    "ts-node": "10.9.2"
+  }
+}
