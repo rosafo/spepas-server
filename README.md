@@ -1,82 +1,124 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/slatedocs/img/main/logo-slate.png" alt="Slate: API Documentation Generator" width="226">
-  <br>
-  <a href="https://github.com/slatedocs/slate/actions?query=workflow%3ABuild+branch%3Amain"><img src="https://github.com/slatedocs/slate/workflows/Build/badge.svg?branch=main" alt="Build Status"></a>
-  <a href="https://hub.docker.com/r/slatedocs/slate"><img src="https://img.shields.io/docker/v/slatedocs/slate?sort=semver" alt="Docker Version" /></a>
-</p>
+# spe-spas-backend
 
-<p align="center">Slate helps you create beautiful, intelligent, responsive API documentation.</p>
+This project was generated with [`@vendure/create`](https://github.com/vendure-ecommerce/vendure/tree/master/packages/create).
 
-<p align="center"><img src="https://raw.githubusercontent.com/slatedocs/img/main/screenshot-slate.png" width=700 alt="Screenshot of Example Documentation created with Slate"></p>
+Useful links:
 
-<p align="center"><em>The example above was created with Slate. Check it out at <a href="https://slatedocs.github.io/slate">slatedocs.github.io/slate</a>.</em></p>
+- [Vendure docs](https://www.vendure.io/docs)
+- [Vendure Discord community](https://www.vendure.io/community)
+- [Vendure on GitHub](https://github.com/vendure-ecommerce/vendure)
+- [Vendure plugin template](https://github.com/vendure-ecommerce/plugin-template)
 
-Features
-------------
+## Directory structure
 
-* **Clean, intuitive design** — With Slate, the description of your API is on the left side of your documentation, and all the code examples are on the right side. Inspired by [Stripe's](https://stripe.com/docs/api) and [PayPal's](https://developer.paypal.com/webapps/developer/docs/api/) API docs. Slate is responsive, so it looks great on tablets, phones, and even in print.
+* `/src` contains the source code of your Vendure server. All your custom code and plugins should reside here.
+* `/static` contains static (non-code) files such as assets (e.g. uploaded images) and email templates.
 
-* **Everything on a single page** — Gone are the days when your users had to search through a million pages to find what they wanted. Slate puts the entire documentation on a single page. We haven't sacrificed linkability, though. As you scroll, your browser's hash will update to the nearest header, so linking to a particular point in the documentation is still natural and easy.
+## Development
 
-* **Slate is just Markdown** — When you write docs with Slate, you're just writing Markdown, which makes it simple to edit and understand. Everything is written in Markdown — even the code samples are just Markdown code blocks.
+```
+npm run dev
+```
 
-* **Write code samples in multiple languages** — If your API has bindings in multiple programming languages, you can easily put in tabs to switch between them. In your document, you'll distinguish different languages by specifying the language name at the top of each code block, just like with GitHub Flavored Markdown.
+will start the Vendure server and [worker](https://www.vendure.io/docs/developer-guide/vendure-worker/) processes from
+the `src` directory.
 
-* **Out-of-the-box syntax highlighting** for [over 100 languages](https://github.com/rouge-ruby/rouge/wiki/List-of-supported-languages-and-lexers), no configuration required.
+## Build
 
-* **Automatic, smoothly scrolling table of contents** on the far left of the page. As you scroll, it displays your current position in the document. It's fast, too. We're using Slate at TripIt to build documentation for our new API, where our table of contents has over 180 entries. We've made sure that the performance remains excellent, even for larger documents.
+```
+npm run build
+```
 
-* **Let your users update your documentation for you** — By default, your Slate-generated documentation is hosted in a public GitHub repository. Not only does this mean you get free hosting for your docs with GitHub Pages, but it also makes it simple for other developers to make pull requests to your docs if they find typos or other problems. Of course, if you don't want to use GitHub, you're also welcome to host your docs elsewhere.
+will compile the TypeScript sources into the `/dist` directory.
 
-* **RTL Support** Full right-to-left layout for RTL languages such as Arabic, Persian (Farsi), Hebrew etc.
+## Production
 
-Getting started with Slate is super easy! Simply press the green "use this template" button above and follow the instructions below. Or, if you'd like to check out what Slate is capable of, take a look at the [sample docs](https://slatedocs.github.io/slate/).
+For production, there are many possibilities which depend on your operational requirements as well as your production
+hosting environment.
 
-Getting Started with Slate
-------------------------------
+### Running directly
 
-To get started with Slate, please check out the [Getting Started](https://github.com/slatedocs/slate/wiki#getting-started)
-section in our [wiki](https://github.com/slatedocs/slate/wiki).
+You can run the built files directly with the `start` script:
 
-We support running Slate in three different ways:
-* [Natively](https://github.com/slatedocs/slate/wiki/Using-Slate-Natively)
-* [Using Vagrant](https://github.com/slatedocs/slate/wiki/Using-Slate-in-Vagrant)
-* [Using Docker](https://github.com/slatedocs/slate/wiki/Using-Slate-in-Docker)
+```
+npm run start
+```
 
-Companies Using Slate
----------------------------------
+You could also consider using a process manager like [pm2](https://pm2.keymetrics.io/) to run and manage
+the server & worker processes.
 
-* [NASA](https://api.nasa.gov)
-* [Sony](http://developers.cimediacloud.com)
-* [Best Buy](https://bestbuyapis.github.io/api-documentation/)
-* [Travis-CI](https://docs.travis-ci.com/api/)
-* [Greenhouse](https://developers.greenhouse.io/harvest.html)
-* [WooCommerce](http://woocommerce.github.io/woocommerce-rest-api-docs/)
-* [Dwolla](https://docs.dwolla.com/)
-* [Clearbit](https://clearbit.com/docs)
-* [Coinbase](https://developers.coinbase.com/api)
-* [Parrot Drones](http://developer.parrot.com/docs/bebop/)
-* [CoinAPI](https://docs.coinapi.io/)
+### Using Docker
 
-You can view more in [the list on the wiki](https://github.com/slatedocs/slate/wiki/Slate-in-the-Wild).
+We've included a sample [Dockerfile](./Dockerfile) which you can build with the following command:
 
-Questions? Need Help? Found a bug?
---------------------
+```
+docker build -t vendure .
+```
 
-If you've got questions about setup, deploying, special feature implementation in your fork, or just want to chat with the developer, please feel free to [start a thread in our Discussions tab](https://github.com/slatedocs/slate/discussions)!
+This builds an image and tags it with the name "vendure". We can then run it with:
 
-Found a bug with upstream Slate? Go ahead and [submit an issue](https://github.com/slatedocs/slate/issues). And, of course, feel free to submit pull requests with bug fixes or changes to the `dev` branch.
+```
+# Run the server
+docker run -dp 3000:3000 -e "DB_HOST=host.docker.internal" --name vendure-server vendure npm run start:server
 
-Contributors
---------------------
+# Run the worker
+docker run -dp 3000:3000 -e "DB_HOST=host.docker.internal" --name vendure-worker vendure npm run start:worker
+```
 
-Slate was built by [Robert Lord](https://lord.io) while at [TripIt](https://www.tripit.com/). The project is now maintained by [Matthew Peveler](https://github.com/MasterOdin) and [Mike Ralphson](https://github.com/MikeRalphson).
+Here is a breakdown of the command used above:
 
-Thanks to the following people who have submitted major pull requests:
+- `docker run` - run the image we created with `docker build`
+- `-dp 3000:3000` - the `-d` flag means to run in "detached" mode, so it runs in the background and does not take
+control of your terminal. `-p 3000:3000` means to expose port 3000 of the container (which is what Vendure listens
+on by default) as port 3000 on your host machine.
+- `-e "DB_HOST=host.docker.internal"` - the `-e` option allows you to define environment variables. In this case we
+are setting the `DB_HOST` to point to a special DNS name that is created by Docker desktop which points to the IP of
+the host machine. Note that `host.docker.internal` only exists in a Docker Desktop environment and thus should only be
+used in development.
+- `--name vendure-server` - we give the container a human-readable name.
+- `vendure` - we are referencing the tag we set up during the build.
+- `npm run start:server` - this last part is the actual command that should be run inside the container.
 
-- [@chrissrogers](https://github.com/chrissrogers)
-- [@bootstraponline](https://github.com/bootstraponline)
-- [@realityking](https://github.com/realityking)
-- [@cvkef](https://github.com/cvkef)
+### Docker compose
 
-Also, thanks to [Sauce Labs](http://saucelabs.com) for sponsoring the development of the responsive styles.
+We've included a sample [docker-compose.yml](./docker-compose.yml) file which demonstrates how the server, worker, and
+database may be orchestrated with Docker Compose.
+
+## Plugins
+
+In Vendure, your custom functionality will live in [plugins](https://www.vendure.io/docs/plugins/).
+These should be located in the `./src/plugins` directory.
+
+## Migrations
+
+[Migrations](https://www.vendure.io/docs/developer-guide/migrations/) allow safe updates to the database schema. Migrations
+will be required whenever you make changes to the `customFields` config or define new entities in a plugin.
+
+The following npm scripts can be used to generate migrations:
+
+```
+npm run migration:generate [name]
+```
+
+The generated migration file will be found in the `./src/migrations/` directory, and should be committed to source control.
+Next time you start the server, and outstanding migrations found in that directory will be run by the `runMigrations()`
+function in the [index.ts file](./src/index.ts).
+
+If, during initial development, you do not wish to manually generate a migration on each change to customFields etc, you
+can set `dbConnectionOptions.synchronize` to `true`. This will cause the database schema to get automatically updated
+on each start, removing the need for migration files. Note that this is **not** recommended once you have production
+data that you cannot lose.
+
+---
+
+You can also run any pending migrations manually, without starting the server by running:
+
+```
+npm run migration:run
+```
+
+You can revert the most recently-applied migration with:
+
+```
+npm run migration:revert
+```
