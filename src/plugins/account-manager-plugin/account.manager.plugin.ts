@@ -1,4 +1,9 @@
-import { PluginCommonModule, VendurePlugin } from '@vendure/core';
+import {
+  Asset,
+  LanguageCode,
+  PluginCommonModule,
+  VendurePlugin
+} from '@vendure/core';
 import { CustomCustomer } from './entities/customer.entity';
 import { customerApiExtensions } from './api/api-extensions';
 import { CustomerResolver } from './api/customer.resolver';
@@ -13,6 +18,17 @@ import { EmailService } from './communication/email/email.service';
   shopApiExtensions: {
     schema: customerApiExtensions,
     resolvers: [CustomerResolver]
+  },
+  configuration: (config) => {
+    config.customFields.Customer.push({
+      name: 'avatar',
+      type: 'relation',
+      label: [{ languageCode: LanguageCode.en, value: 'Customer avatar' }],
+      entity: Asset,
+      nullable: true
+    });
+    
+    return config;
   }
 })
 export class AccountManagerPlugin {}

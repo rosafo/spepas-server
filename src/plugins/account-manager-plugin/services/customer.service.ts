@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  BadRequestException,
+  NotFoundException
+} from '@nestjs/common';
 import {
   ID,
   RequestContext,
@@ -42,9 +47,8 @@ export class CustomerService {
     input: { phone: string; password: string }
   ): Promise<{ success: boolean; message?: string }> {
     try {
-      // Validate input
       if (!input.phone || !input.password) {
-        throw new UserInputError('Phone and password are required');
+        throw new BadRequestException('Phone and password are required');
       }
       // Check if the phone number already exists in the database
       const userRepository = this.connection.getRepository(ctx, CustomCustomer);
@@ -53,7 +57,9 @@ export class CustomerService {
       });
 
       if (existingUser) {
-        throw new UserInputError('User with this phone number already exists');
+        throw new ConflictException(
+          'User with this phone number already exists'
+        );
       }
       // Store the hashed password and phone number in the database
       const newUser = userRepository.create({
@@ -62,7 +68,6 @@ export class CustomerService {
       });
 
       await userRepository.save(newUser);
-      // Generate a random OTP
       const generatedOtp = Math.floor(
         100000 + Math.random() * 900000
       ).toString();
@@ -107,7 +112,7 @@ export class CustomerService {
       typeof storedOtpEntry.otp !== 'string' ||
       input.otp !== storedOtpEntry.otp
     ) {
-      throw new UserInputError('Invalid OTP');
+      throw new BadRequestException('Invalid OTP');
     }
     // Get the customer associated with the OTP
     const userRepository = this.connection.getRepository(ctx, CustomCustomer);
@@ -119,7 +124,7 @@ export class CustomerService {
     });
 
     if (!user) {
-      throw new UserInputError(`User with OTP ${input.otp} not found`);
+      throw new NotFoundException(`User with OTP ${input.otp} not found`);
     }
     // Generate and return a token
     const userId: string = user.id.toString();
@@ -145,14 +150,14 @@ export class CustomerService {
       gps: string;
       profilePicture?: { file: any };
     }
-  ): Promise<{ token: string }> {
+  ): Promise<{ token: string; user: CustomCustomer }> {
     const userRepository = this.connection.getRepository(ctx, CustomCustomer);
     const user = await userRepository.findOne({
       where: { id: Number(input.userId) }
     });
 
     if (!user) {
-      throw new UserInputError('User not found');
+      throw new NotFoundException('User not found');
     }
 
     user.fullName = input.fullName;
@@ -170,7 +175,7 @@ export class CustomerService {
     // Save the updated user and generate a token
     await userRepository.save(user);
     const token = createToken(input.userId);
-    return { token };
+    return { token, user };
   }
 
   /**
@@ -217,19 +222,14 @@ export class CustomerService {
       // Asynchronous file write operation
       await fs.promises.writeFile(filePath, uploadedFile.buffer);
 
-    const newAsset = new Asset();
-    newAsset.name = fileName;
-    newAsset.type = 'image';
-    newAsset.size = uploadedFile.size;
-    newAsset.url = filePath;
-
-    // Save the new Asset to get its ID
-    const savedAsset = await newAsset.save();
-
-    // Assign the ID of the new Asset to user.avatarId
-    user.avatarId = savedAsset.id;
-
-      // Save the user with the updated avatar
+      const newAsset = new Asset();
+      newAsset.name = fileName;
+      newAsset.type = 'image';
+      newAsset.size = uploadedFile.size;
+      newAsset.url = filePath;
+      // Save the new Asset to get its ID
+      const savedAsset = await newAsset.save();
+      user.avatarId = savedAsset.id;
       await userRepository.save(user);
 
       return user;
@@ -257,14 +257,14 @@ export class CustomerService {
     });
 
     if (!user) {
-      throw new UserInputError(
+      throw new NotFoundException(
         `User with identifier ${input.identifier} not found`
       );
     }
 
     const isPasswordValid = await bcrypt.compare(input.password, user.password);
     if (!isPasswordValid) {
-      throw new UserInputError('Invalid password');
+      throw new BadRequestException('Invalid password');
     }
 
     // Generate and return a token
@@ -295,13 +295,13 @@ export class CustomerService {
     });
 
     if (!user) {
-      throw new UserInputError(`User with ID ${userId} not found`);
+      throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
     const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
 
     if (!isPasswordValid) {
-      throw new UserInputError('Invalid old password');
+      throw new BadRequestException('Invalid old password');
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -355,7 +355,7 @@ export class CustomerService {
     });
 
     if (!user) {
-      throw new UserInputError(
+      throw new NotFoundException(
         `User with identifier ${input.userId} not found`
       );
     }

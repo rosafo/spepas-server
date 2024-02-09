@@ -1,4 +1,7 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
+// import  { GraphQLUpload,FileUpload}  from 'graphql-upload';
+import { Stream } from 'stream';
+
 import {
   Ctx,
   RequestContext,
@@ -17,6 +20,13 @@ export type InitiatePasswordResetInput = {
   identifier: string;
 };
 
+export type FileUpload = {
+  filename: string;
+  mimetype: string;
+  encoding: string;
+  createReadStream: () => Stream;
+}
+  
 export type VerifyPasswordRecoveryOtpInput = {
   otp: string;
 };
@@ -35,6 +45,7 @@ export type ProfilePictureUploadInput = {
   userId: string;
   file: any;
 };
+
 
 @Resolver('CustomCustomer')
 export class CustomerResolver {
@@ -64,7 +75,7 @@ export class CustomerResolver {
       gps: string;
       profilePicture?: { file: any };
     }
-  ): Promise<{ token: string }> {
+  ): Promise<{ token: string, user: CustomCustomer }> {
     return this.customerService.completeAccountCreation(ctx, input);
   }
 
@@ -73,7 +84,7 @@ export class CustomerResolver {
   async customLogin(
     @Ctx() ctx: RequestContext,
     @Args('input') input: CustomLoginInput
-  ): Promise<{ token: string }> {
+  ): Promise<{ token: string, user: CustomCustomer }> {
     return this.customerService.customLogin(ctx, input);
   }
 
@@ -81,13 +92,13 @@ export class CustomerResolver {
   @Transaction()
   async changePassword(
     @Ctx() ctx: RequestContext,
-    @Args('customerId') customerId: ID,
+    @Args('userId') userId: ID,
     @Args('oldPassword') oldPassword: string,
     @Args('newPassword') newPassword: string
   ): Promise<CustomCustomer> {
     return this.customerService.changePassword(
       ctx,
-      customerId,
+      userId,
       oldPassword,
       newPassword
     );
