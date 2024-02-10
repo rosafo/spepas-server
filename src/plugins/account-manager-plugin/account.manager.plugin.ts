@@ -4,6 +4,7 @@ import {
   PluginCommonModule,
   VendurePlugin
 } from '@vendure/core';
+import { AuthMiddleware } from '../utils/auth.middleware'; 
 import { CustomCustomer } from './entities/customer.entity';
 import { customerApiExtensions } from './api/api-extensions';
 import { CustomerResolver } from './api/customer.resolver';
@@ -31,4 +32,10 @@ import { EmailService } from './communication/email/email.service';
     return config;
   }
 })
-export class AccountManagerPlugin {}
+export class AccountManagerPlugin {
+  static init(options: any) {
+    options.plugins.push(AuthMiddleware);
+    return AccountManagerPlugin;
+  }
+}
+
