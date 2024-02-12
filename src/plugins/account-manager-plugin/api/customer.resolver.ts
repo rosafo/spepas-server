@@ -43,7 +43,7 @@ export type CustomLoginInput = {
 
 export type ProfilePictureUploadInput = {
   userId: string;
-  file: any;
+  file: FileUpload;
 };
 
 

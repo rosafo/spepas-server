@@ -195,12 +195,14 @@ export class CustomerService {
       where: { id: Number(input.userId) }
     });
 
+    console.log(input.userId);
+
     if (!user) {
-      throw new UserInputError('User not found');
+      throw new NotFoundException('User not found');
     }
 
     if (!input.file) {
-      throw new UserInputError('No file uploaded');
+      throw new BadRequestException('No file uploaded');
     }
 
     const uploadedFile = input.file;

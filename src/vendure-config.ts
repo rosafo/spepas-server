@@ -1,21 +1,16 @@
 import {
   dummyPaymentHandler,
   DefaultJobQueuePlugin,
-  DefaultSearchPlugin,
   VendureConfig,
-  NativeAuthenticationStrategy,
-  Asset,
   LanguageCode
 } from '@vendure/core';
 import { defaultEmailHandlers, EmailPlugin } from '@vendure/email-plugin';
 import { AssetServerPlugin } from '@vendure/asset-server-plugin';
 import { AdminUiPlugin } from '@vendure/admin-ui-plugin';
+import { ElasticsearchPlugin } from '@vendure/elasticsearch-plugin';
 import { AccountManagerPlugin } from './plugins/account-manager-plugin/account.manager.plugin';
 import { MultivendorPlugin } from './plugins/multivendor-plugin/multivendor.plugin';
-import {
-  facebookAuthenticationStrategy,
-  googleAuthenticationStrategy
-} from './plugins/social-auth-strategy/index';
+import { elasticsearchOptions } from './elasticsearch-options';
 import { GoogleAuthPlugin } from './plugins/google-auth/google-auth-plugin';
 import 'dotenv/config';
 import path from 'path';
@@ -33,7 +28,7 @@ export const config: VendureConfig = {
     cors: {
       origin: '*',
       methods: 'GET, PUT, POST, DELETE',
-      credentials: true,
+      credentials: true
     },
     ...(IS_DEV
       ? {
@@ -56,13 +51,13 @@ export const config: VendureConfig = {
     },
     cookieOptions: {
       secret: process.env.COOKIE_SECRET
-    },
+    }
     // shopAuthenticationStrategy: [
     //   facebookAuthenticationStrategy,
     //   googleAuthenticationStrategy
     // ]
   },
-  
+
   dbConnectionOptions: {
     type: 'better-sqlite3',
     // See the README.md "Migrations" section for an explanation of
@@ -78,20 +73,44 @@ export const config: VendureConfig = {
   // When adding or altering custom field definitions, the database will
   // need to be updated. See the "Migrations" section in README.md.
   customFields: {
-    User: [{ name: 'socialLoginToken', type: 'string', public: false }],
+    User: [
+      {
+        name: 'socialLoginToken',
+        type: 'string',
+        public: false
+      }
+    ],
     Product: [
       {
-        name: 'condition',
+        name: 'salesData',
         type: 'string',
-        label: [{ languageCode: LanguageCode.en, value: 'Condition' }],
-        options: [
+        label: [
           {
-            value: 'new',
-            label: [{ languageCode: LanguageCode.en, value: 'New' }]
-          },
+            languageCode: LanguageCode.en,
+            value: 'Sales Data'
+          }
+        ],
+        description: [
           {
-            value: 'used',
-            label: [{ languageCode: LanguageCode.en, value: 'Used' }]
+            languageCode: LanguageCode.en,
+            value:
+              'Data related to product sales, such as total quantity sold or revenue generated.'
+          }
+        ]
+      },
+      {
+        name: 'recommendationScore',
+        type: 'float',
+        label: [
+          {
+            languageCode: LanguageCode.en,
+            value: 'Recommendation Score'
+          }
+        ],
+        description: [
+          {
+            languageCode: LanguageCode.en,
+            value: 'Score indicating how strongly the product is recommended.'
           }
         ]
       }
@@ -115,7 +134,11 @@ export const config: VendureConfig = {
       platformFeeSKU: 'FEE'
     }),
     DefaultJobQueuePlugin.init({ useDatabaseForBuffer: true }),
-    DefaultSearchPlugin.init({ bufferUpdates: false, indexStockStatus: true }),
+    ElasticsearchPlugin.init({
+      host: 'http://localhost',
+      port: 9200,
+      ...elasticsearchOptions
+    }),
     EmailPlugin.init({
       devMode: true,
       outputPath: path.join(__dirname, '../static/email/test-emails'),
