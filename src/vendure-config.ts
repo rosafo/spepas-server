@@ -79,41 +79,6 @@ export const config: VendureConfig = {
         type: 'string',
         public: false
       }
-    ],
-    Product: [
-      {
-        name: 'salesData',
-        type: 'string',
-        label: [
-          {
-            languageCode: LanguageCode.en,
-            value: 'Sales Data'
-          }
-        ],
-        description: [
-          {
-            languageCode: LanguageCode.en,
-            value:
-              'Data related to product sales, such as total quantity sold or revenue generated.'
-          }
-        ]
-      },
-      {
-        name: 'recommendationScore',
-        type: 'float',
-        label: [
-          {
-            languageCode: LanguageCode.en,
-            value: 'Recommendation Score'
-          }
-        ],
-        description: [
-          {
-            languageCode: LanguageCode.en,
-            value: 'Score indicating how strongly the product is recommended.'
-          }
-        ]
-      }
     ]
   },
 
