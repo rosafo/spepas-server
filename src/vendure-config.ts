@@ -14,6 +14,7 @@ import { elasticsearchOptions } from './elasticsearch-options';
 import { GoogleAuthPlugin } from './plugins/google-auth/google-auth-plugin';
 import 'dotenv/config';
 import path from 'path';
+import { SearchSortPlugin } from './plugins/search-sort-plugin/search-sort-plugin';
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const IS_DEV = process.env.APP_ENV === 'dev';
@@ -51,7 +52,8 @@ export const config: VendureConfig = {
     },
     cookieOptions: {
       secret: process.env.COOKIE_SECRET
-    }
+    },
+    requireVerification: true,
     // shopAuthenticationStrategy: [
     //   facebookAuthenticationStrategy,
     //   googleAuthenticationStrategy
@@ -99,11 +101,13 @@ export const config: VendureConfig = {
       platformFeeSKU: 'FEE'
     }),
     DefaultJobQueuePlugin.init({ useDatabaseForBuffer: true }),
-    ElasticsearchPlugin.init({
-      host: 'http://localhost',
-      port: 9200,
-      ...elasticsearchOptions
+    
+      ElasticsearchPlugin.init({
+        host: 'http://localhost',
+        port: 9200,
+        ...elasticsearchOptions
     }),
+    
     EmailPlugin.init({
       devMode: true,
       outputPath: path.join(__dirname, '../static/email/test-emails'),
@@ -127,6 +131,7 @@ export const config: VendureConfig = {
         apiPort: 3000
       }
     }),
-    AccountManagerPlugin
+    AccountManagerPlugin,
+    // SearchSortPlugin
   ]
 };

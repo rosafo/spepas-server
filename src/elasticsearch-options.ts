@@ -40,5 +40,21 @@ export const elasticsearchOptions: ElasticsearchOptions = {
       }
       return sortCriteria;
     }
-  }
+  },
+  extendSearchSortType: [
+    'TOP_SELLING',
+    'RECOMMENDED',
+    'RECENTLY_ADDED',
+    'PRICE_LOW_TO_HIGH',
+    'PRICE_HIGH_TO_LOW'
+  ],
+  // indexMappingProperties: {
+  //   'vendure-products': {
+  //     properties: {
+  //       'createdAt': {
+  //         type: 'date'
+  //       }
+  //     }
+  //   }
+  // }
 };

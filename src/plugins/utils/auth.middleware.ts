@@ -1,30 +1,35 @@
-
-import { Injectable, NestMiddleware } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
-import * as jwt from 'jsonwebtoken';
+// auth.middleware.ts
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Request } from 'express';
 import { verify } from 'jsonwebtoken';
 import 'dotenv/config';
-@Injectable()
 
-export class AuthMiddleware implements NestMiddleware {
-  use(req: Request, res: Response, next: NextFunction) {
-    const token =
-      req.headers.authorization?.split(' ')[1] || (req.query.token as string);
-    if (token) {
-      try {
-        const decodedToken = verify(
-          token,
-          process.env.JWT_SECRET!
-        ) as unknown as { id: string }; 
-        (req as any)['user'] = decodedToken; 
-        next();
-      } catch (error) {
-        res.status(401).json({ message: 'Unauthorized: Invalid token' });
-      }
-    } else {
-      res.status(401).json({ message: 'Unauthorized: Token missing' });
+@Injectable()
+@Injectable()
+export class AuthMiddleware {
+  verifyToken(headers: Record<string, string | string[]>): { id: string } {
+    let token: string | undefined;
+    if (typeof headers['x-access-token'] === 'string') {
+      token = headers['x-access-token'];
+    } else if (Array.isArray(headers['authorization'])) {
+      token = headers['authorization'][0];
+    } else if (typeof headers['authorization'] === 'string') {
+      token = headers['authorization'];
+    }
+
+    if (!token) {
+      throw new UnauthorizedException('Unauthorized: Token missing');
+    }
+
+    try {
+      const decodedToken = verify(
+        token,
+        process.env.JWT_SECRET!
+      ) as { id: string };
+      return decodedToken;
+    } catch (error) {
+      throw new UnauthorizedException('Unauthorized: Invalid token');
     }
   }
 }
-
 

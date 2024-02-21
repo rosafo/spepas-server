@@ -2,14 +2,24 @@ import { Args, Mutation, Resolver } from '@nestjs/graphql';
 // import  { GraphQLUpload,FileUpload}  from 'graphql-upload';
 import { Stream } from 'stream';
 
-import {
-  Ctx,
-  RequestContext,
-  Transaction,
-  ID,
-} from '@vendure/core';
+import { Ctx, RequestContext, Transaction, ID } from '@vendure/core';
+
 import { CustomerService } from '../services/customer.service';
 import { CustomCustomer } from '../entities/customer.entity';
+import { IncomingHttpHeaders } from 'http';
+
+function convertHeaders(
+  headers: IncomingHttpHeaders
+): Record<string, string[]> {
+  return Object.entries(headers).reduce((acc, [key, value]) => {
+    if (Array.isArray(value)) {
+      acc[key] = value.filter((v) => typeof v === 'string') as string[];
+    } else if (typeof value === 'string') {
+      acc[key] = [value];
+    }
+    return acc;
+  }, {} as Record<string, string[]>);
+}
 
 export type InitiateAccountCreationInput = {
   phone: string;
@@ -25,8 +35,8 @@ export type FileUpload = {
   mimetype: string;
   encoding: string;
   createReadStream: () => Stream;
-}
-  
+};
+
 export type VerifyPasswordRecoveryOtpInput = {
   otp: string;
 };
@@ -45,7 +55,6 @@ export type ProfilePictureUploadInput = {
   userId: string;
   file: FileUpload;
 };
-
 
 @Resolver('CustomCustomer')
 export class CustomerResolver {
@@ -66,17 +75,15 @@ export class CustomerResolver {
     @Ctx() ctx: RequestContext,
     @Args('input')
     input: {
-      userId: string;
-      otp: string;
-      phone: string;
       fullName: string;
       city: string;
       street: string;
       gps: string;
       profilePicture?: { file: any };
     }
-  ): Promise<{ token: string, user: CustomCustomer }> {
-    return this.customerService.completeAccountCreation(ctx, input);
+  ): Promise<{ token: string; user: CustomCustomer }> {
+    const headers = convertHeaders(ctx.req?.headers || {});
+    return this.customerService.completeAccountCreation(ctx, input, headers);
   }
 
   @Mutation()
@@ -84,7 +91,7 @@ export class CustomerResolver {
   async customLogin(
     @Ctx() ctx: RequestContext,
     @Args('input') input: CustomLoginInput
-  ): Promise<{ token: string, user: CustomCustomer }> {
+  ): Promise<{ token: string; user: CustomCustomer }> {
     return this.customerService.customLogin(ctx, input);
   }
 
@@ -92,15 +99,15 @@ export class CustomerResolver {
   @Transaction()
   async changePassword(
     @Ctx() ctx: RequestContext,
-    @Args('userId') userId: ID,
     @Args('oldPassword') oldPassword: string,
     @Args('newPassword') newPassword: string
   ): Promise<CustomCustomer> {
+    const headers = convertHeaders(ctx.req?.headers || {});
     return this.customerService.changePassword(
       ctx,
-      userId,
       oldPassword,
-      newPassword
+      newPassword,
+      headers
     );
   }
 
@@ -122,13 +129,15 @@ export class CustomerResolver {
     return this.customerService.initiatePasswordReset(ctx, input);
   }
 
+  // Mutation definition
   @Mutation()
   @Transaction()
   async resetUserPassword(
     @Ctx() ctx: RequestContext,
-    @Args('input') input: ResetUserPasswordInput
+    @Args('newPassword') newPassword: string
   ): Promise<CustomCustomer> {
-    return this.customerService.resetUserPassword(ctx, input);
+    const headers = convertHeaders(ctx.req?.headers || {});
+    return this.customerService.resetUserPassword(ctx, newPassword, headers);
   }
 
   @Mutation()
@@ -137,6 +146,7 @@ export class CustomerResolver {
     @Ctx() ctx: RequestContext,
     @Args('input') input: ProfilePictureUploadInput
   ): Promise<CustomCustomer> {
-    return this.customerService.uploadProfilePicture(ctx, input);
+    const headers = convertHeaders(ctx.req?.headers || {});
+    return this.customerService.uploadProfilePicture(ctx, input, headers);
   }
 }

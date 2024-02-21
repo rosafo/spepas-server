@@ -39,7 +39,6 @@ export const customerApiExtensions = gql`
   }
 
   input CompleteAccountCreationInput {
-    userId: String!
     fullName: String!
     city: String!
     street: String!
@@ -61,7 +60,6 @@ export const customerApiExtensions = gql`
   }
 
   input ResetPasswordInput {
-    userId: String!
     newPassword: String!
   }
 
@@ -73,10 +71,9 @@ export const customerApiExtensions = gql`
   extend type Mutation {
     initiateAccountCreation(input: InitiateAccountCreationInput!): OtpResult
     completeAccountCreation(input: CompleteAccountCreationInput!): AuthResult
-    uploadProfilePicture(userId: ID!, file: Upload!): CustomCustomer
+    uploadProfilePicture(file: Upload!): CustomCustomer
     customLogin(input: LoginInput!): AuthResult
     changePassword(
-      userId: ID!
       oldPassword: String!
       newPassword: String!
     ): CustomCustomer

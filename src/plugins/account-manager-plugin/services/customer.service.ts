@@ -2,7 +2,8 @@ import {
   Injectable,
   ConflictException,
   BadRequestException,
-  NotFoundException
+  NotFoundException,
+  UnauthorizedException
 } from '@nestjs/common';
 import {
   ID,
@@ -16,6 +17,7 @@ import { SmsService } from '../communication/sms/sms.service';
 import { EmailService } from '../communication/email/email.service';
 import * as bcrypt from 'bcrypt';
 import { createToken, createTemporalToken } from '../../utils/token-utils';
+import { AuthMiddleware } from '../../utils/auth.middleware';
 import { Asset } from '../entities/asset.entity';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
@@ -32,9 +34,9 @@ export class CustomerService {
   constructor(
     private connection: TransactionalConnection,
     private smsService: SmsService,
-    private emailService: EmailService
+    private emailService: EmailService,
+    private readonly authMiddleware: AuthMiddleware
   ) {}
-
   /**
    * Initiate the account creation process by sending an OTP to the user's phone.
    *
@@ -143,17 +145,21 @@ export class CustomerService {
   async completeAccountCreation(
     ctx: RequestContext,
     input: {
-      userId: string;
       fullName: string;
       city: string;
       street: string;
       gps: string;
       profilePicture?: { file: any };
-    }
+    },
+    headers: Record<string, string | string[]>
   ): Promise<{ token: string; user: CustomCustomer }> {
+    // Verify the token
+    const decodedToken = this.authMiddleware.verifyToken(headers);
+    const userId = decodedToken.id;
+
     const userRepository = this.connection.getRepository(ctx, CustomCustomer);
     const user = await userRepository.findOne({
-      where: { id: Number(input.userId) }
+      where: { id: Number(userId) }
     });
 
     if (!user) {
@@ -166,15 +172,15 @@ export class CustomerService {
     user.gps = input.gps;
 
     // If profile picture is provided, upload it
-    if (input.profilePicture) {
-      await this.uploadProfilePicture(ctx, {
-        userId: input.userId,
-        file: input.profilePicture.file
-      });
-    }
+    // if (input.profilePicture) {
+    //   await this.uploadProfilePicture(ctx, {
+    //     userId: input.userId,
+    //     file: input.profilePicture.file
+    //   });
+    // }
     // Save the updated user and generate a token
     await userRepository.save(user);
-    const token = createToken(input.userId);
+    const token = createToken(userId);
     return { token, user };
   }
 
@@ -188,24 +194,29 @@ export class CustomerService {
 
   async uploadProfilePicture(
     ctx: RequestContext,
-    input: { userId: string; file: any }
+    file: any,
+    headers: Record<string, string | string[]>
   ): Promise<CustomCustomer> {
+
+    const decodedToken = this.authMiddleware.verifyToken(headers);
+    const userId = decodedToken.id;
+
     const userRepository = this.connection.getRepository(ctx, CustomCustomer);
     const user = await userRepository.findOne({
-      where: { id: Number(input.userId) }
+      where: { id: Number(userId) }
     });
 
-    console.log(input.userId);
+    console.log(userId);
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    if (!input.file) {
+    if (!file) {
       throw new BadRequestException('No file uploaded');
     }
 
-    const uploadedFile = input.file;
+    const uploadedFile = file;
     const fileExtension = path.extname(uploadedFile.originalname);
     const fileName = `${uuidv4()}${fileExtension}`;
     const uploadFolderPath = path.join(
@@ -287,10 +298,14 @@ export class CustomerService {
    */
   async changePassword(
     ctx: RequestContext,
-    userId: ID,
     oldPassword: string,
-    newPassword: string
+    newPassword: string,
+    headers: Record<string, string | string[]>
   ): Promise<CustomCustomer> {
+    
+    const decodedToken = this.authMiddleware.verifyToken(headers);
+    const userId = decodedToken.id;
+
     const userRepository = this.connection.getRepository(ctx, CustomCustomer);
     const user = await userRepository.findOne({
       where: { id: Number(userId) }
@@ -346,23 +361,22 @@ export class CustomerService {
    */
   async resetUserPassword(
     ctx: RequestContext,
-    input: {
-      userId: string;
-      newPassword: string;
-    }
+    newPassword: string,
+    headers: Record<string, string | string[]>
   ): Promise<CustomCustomer> {
+    const decodedToken = this.authMiddleware.verifyToken(headers);
+    const userId = decodedToken.id;
+
     const userRepository = this.connection.getRepository(ctx, CustomCustomer);
     const user = await userRepository.findOne({
-      where: { id: Number(input.userId) }
+      where: { id: Number(userId) }
     });
 
     if (!user) {
-      throw new NotFoundException(
-        `User with identifier ${input.userId} not found`
-      );
+      throw new NotFoundException(`User with identifier ${userId} not found`);
     }
 
-    const hashedPassword = await bcrypt.hash(input.newPassword, 10);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     const updatedUser = await userRepository.save(user);
     return updatedUser;
