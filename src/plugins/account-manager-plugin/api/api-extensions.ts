@@ -53,8 +53,7 @@ export const customerApiExtensions = gql`
   input VerifyPasswordRecoveryOtpInput {
     otp: String!
   }
-  
-   
+
   input InitiatePasswordResetInput {
     identifier: String!
   }
@@ -66,17 +65,13 @@ export const customerApiExtensions = gql`
   extend type Query {
     customer(id: ID!): CustomCustomer
   }
-  
 
   extend type Mutation {
     initiateAccountCreation(input: InitiateAccountCreationInput!): OtpResult
     completeAccountCreation(input: CompleteAccountCreationInput!): AuthResult
     uploadProfilePicture(file: Upload!): CustomCustomer
     customLogin(input: LoginInput!): AuthResult
-    changePassword(
-      oldPassword: String!
-      newPassword: String!
-    ): CustomCustomer
+    changePassword(oldPassword: String!, newPassword: String!): CustomCustomer
     verifyOtp(input: VerifyPasswordRecoveryOtpInput!): verifiedResponse
     initiatePasswordReset(input: InitiatePasswordResetInput!): OtpResult
     resetUserPassword(input: ResetPasswordInput!): CustomCustomer

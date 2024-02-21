@@ -172,12 +172,9 @@ export class CustomerService {
     user.gps = input.gps;
 
     // If profile picture is provided, upload it
-    // if (input.profilePicture) {
-    //   await this.uploadProfilePicture(ctx, {
-    //     userId: input.userId,
-    //     file: input.profilePicture.file
-    //   });
-    // }
+    if (input.profilePicture) {
+      await this.uploadProfilePicture(ctx, user, input.profilePicture.file);
+    }
     // Save the updated user and generate a token
     await userRepository.save(user);
     const token = createToken(userId);
@@ -205,8 +202,6 @@ export class CustomerService {
     const user = await userRepository.findOne({
       where: { id: Number(userId) }
     });
-
-    console.log(userId);
 
     if (!user) {
       throw new NotFoundException('User not found');

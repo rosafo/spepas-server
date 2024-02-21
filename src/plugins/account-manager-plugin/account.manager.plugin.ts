@@ -1,11 +1,7 @@
-import {
-  Asset,
-  LanguageCode,
-  PluginCommonModule,
-  VendurePlugin,
-  RequestContext
-} from '@vendure/core';
-import { AuthMiddleware } from '../utils/auth.middleware'; 
+import { MiddlewareConsumer, Module } from '@nestjs/common';
+import { Asset, LanguageCode, PluginCommonModule, RequestContext, VendurePlugin } from '@vendure/core';
+import { MulterMiddleware } from '../utils/multer.middleware';
+import { AuthMiddleware } from '../utils/auth.middleware';
 import { CustomCustomer } from './entities/customer.entity';
 import { customerApiExtensions } from './api/api-extensions';
 import { CustomerResolver } from './api/customer.resolver';
@@ -20,12 +16,7 @@ interface CustomRequestContext extends RequestContext {
 @VendurePlugin({
   imports: [PluginCommonModule],
   entities: [CustomCustomer],
-  providers: [
-    CustomerService, 
-    SmsService, 
-    EmailService,
-    AuthMiddleware 
-  ],
+  providers: [CustomerService, SmsService, EmailService, AuthMiddleware],
   shopApiExtensions: {
     schema: customerApiExtensions,
     resolvers: [CustomerResolver]
@@ -38,7 +29,7 @@ interface CustomRequestContext extends RequestContext {
       entity: Asset,
       nullable: true
     });
-    
+
     return config;
   }
 })
@@ -47,7 +38,11 @@ export class AccountManagerPlugin {
     return AccountManagerPlugin;
   }
 
-  configure(ctx: CustomRequestContext) {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(MulterMiddleware).forRoutes('uploadProfilePicture');
+  }
+
+  configureCtx(ctx: CustomRequestContext) {
     ctx.AuthMiddleware = new AuthMiddleware();
   }
 }

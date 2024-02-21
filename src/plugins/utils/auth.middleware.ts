@@ -1,10 +1,6 @@
-// auth.middleware.ts
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { Request } from 'express';
 import { verify } from 'jsonwebtoken';
 import 'dotenv/config';
-
-@Injectable()
 @Injectable()
 export class AuthMiddleware {
   verifyToken(headers: Record<string, string | string[]>): { id: string } {
@@ -16,20 +12,23 @@ export class AuthMiddleware {
     } else if (typeof headers['authorization'] === 'string') {
       token = headers['authorization'];
     }
-
+  
     if (!token) {
       throw new UnauthorizedException('Unauthorized: Token missing');
     }
-
+  
     try {
       const decodedToken = verify(
         token,
         process.env.JWT_SECRET!
       ) as { id: string };
+      console.log('Decoded token:', decodedToken);
       return decodedToken;
     } catch (error) {
+      console.error('Token verification error:', error);
       throw new UnauthorizedException('Unauthorized: Invalid token');
     }
   }
+  
 }
 

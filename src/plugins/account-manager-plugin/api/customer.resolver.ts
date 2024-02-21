@@ -52,7 +52,6 @@ export type CustomLoginInput = {
 };
 
 export type ProfilePictureUploadInput = {
-  userId: string;
   file: FileUpload;
 };
 
@@ -144,9 +143,9 @@ export class CustomerResolver {
   @Transaction()
   async uploadProfilePicture(
     @Ctx() ctx: RequestContext,
-    @Args('input') input: ProfilePictureUploadInput
+    file: ProfilePictureUploadInput
   ): Promise<CustomCustomer> {
     const headers = convertHeaders(ctx.req?.headers || {});
-    return this.customerService.uploadProfilePicture(ctx, input, headers);
+    return this.customerService.uploadProfilePicture(ctx, file, headers);
   }
 }
