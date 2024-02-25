@@ -6,9 +6,10 @@ export const customerApiExtensions = gql`
     phone: String
     email: String
     fullName: String
-    city: String
-    street: String
-    gps: String
+    addressTitle: String
+    addressCity: String
+    addressStreet: String
+    addressGPS:String
     createdAt: DateTime!
     updatedAt: DateTime!
     avatar: String
@@ -58,8 +59,21 @@ export const customerApiExtensions = gql`
     identifier: String!
   }
 
+  input ChangeContactInput {
+    currentContact: String!
+    newContact: String!
+    password: String!
+  }
+
   input ResetPasswordInput {
     newPassword: String!
+  }
+
+  input AddressInput{
+    title:String!
+    city: String
+    street: String
+    gps: String
   }
 
   extend type Query {
@@ -72,6 +86,8 @@ export const customerApiExtensions = gql`
     uploadProfilePicture(file: Upload!): CustomCustomer
     customLogin(input: LoginInput!): AuthResult
     changePassword(oldPassword: String!, newPassword: String!): CustomCustomer
+    changeContact(input:ChangeContactInput!): CustomCustomer
+    manageAddress(input:AddressInput!): CustomCustomer
     verifyOtp(input: VerifyPasswordRecoveryOtpInput!): verifiedResponse
     initiatePasswordReset(input: InitiatePasswordResetInput!): OtpResult
     resetUserPassword(input: ResetPasswordInput!): CustomCustomer

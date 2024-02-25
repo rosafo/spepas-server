@@ -102,9 +102,9 @@ export const config: VendureConfig = {
     }),
     DefaultJobQueuePlugin.init({ useDatabaseForBuffer: true }),
     
-      ElasticsearchPlugin.init({
-        host: 'http://localhost',
-        port: 9200,
+    ElasticsearchPlugin.init({
+      host: process.env.ELASTICSEARCH_HOST,
+      port: 9200,
         ...elasticsearchOptions
     }),
     

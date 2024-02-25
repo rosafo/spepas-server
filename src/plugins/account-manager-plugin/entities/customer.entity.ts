@@ -28,14 +28,17 @@ export class CustomCustomer extends BaseEntity {
   fullName: string;
 
   @Column({ nullable: true })
-  city: string;
+  addressTitle: string;
 
   @Column({ nullable: true })
-  street: string;
+  addressCity: string;
 
   @Column({ nullable: true })
-  gps: string;
+  addressStreet: string;
 
+  @Column({ nullable: true })
+  addressGPS: string;
+  
   @Column({ default: false })
   emailVerified: boolean;
 

@@ -37,6 +37,7 @@ export class CustomerService {
     private emailService: EmailService,
     private readonly authMiddleware: AuthMiddleware
   ) {}
+
   /**
    * Initiate the account creation process by sending an OTP to the user's phone.
    *
@@ -79,6 +80,7 @@ export class CustomerService {
         identifier: input.phone,
         otp: generatedOtp
       };
+
       // Send the OTP via SMS
       await this.smsService.sendOtpSms(input.phone, generatedOtp);
       return {
@@ -167,9 +169,9 @@ export class CustomerService {
     }
 
     user.fullName = input.fullName;
-    user.city = input.city;
-    user.street = input.street;
-    user.gps = input.gps;
+    user.addressCity = input.city;
+    user.addressStreet = input.street;
+    user.addressGPS = input.gps;
 
     // If profile picture is provided, upload it
     if (input.profilePicture) {
@@ -194,7 +196,6 @@ export class CustomerService {
     file: any,
     headers: Record<string, string | string[]>
   ): Promise<CustomCustomer> {
-
     const decodedToken = this.authMiddleware.verifyToken(headers);
     const userId = decodedToken.id;
 
@@ -297,7 +298,6 @@ export class CustomerService {
     newPassword: string,
     headers: Record<string, string | string[]>
   ): Promise<CustomCustomer> {
-    
     const decodedToken = this.authMiddleware.verifyToken(headers);
     const userId = decodedToken.id;
 
@@ -322,6 +322,108 @@ export class CustomerService {
 
     return updatedUser;
   }
+
+  /**
+   * Change contact information for a user and save the updated user information.
+   *
+   * @param {RequestContext} ctx - the request context
+   * @param {Object} input - object containing currentContact, newContact, and password
+   * @param {Record<string, string | string[]>} headers - request headers
+   * @return {Promise<CustomCustomer>} the updated user information
+   */
+  async changeContact(
+    ctx: RequestContext,
+    input: {
+      currentContact: string;
+      newContact: string;
+      password: string;
+    },
+    headers: Record<string, string | string[]>
+  ): Promise<CustomCustomer> {
+    const decodedToken = this.authMiddleware.verifyToken(headers);
+    const userId = decodedToken.id;
+
+    const userRepository = this.connection.getRepository(ctx, CustomCustomer);
+    const user = await userRepository.findOne({
+      where: { id: Number(userId) }
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+    if (!user.password) {
+      throw new BadRequestException('User password is not set.');
+    }
+
+    // Ensure password is provided
+    if (!input.password) {
+      throw new BadRequestException('Password is required for verification.');
+    }
+
+    const isPasswordValid = await bcrypt.compare(input.password, user.password);
+
+    console.log(isPasswordValid);
+
+    if (!isPasswordValid) {
+      throw new BadRequestException('Invalid password. Please try again.');
+    }
+
+    if (!input.currentContact) {
+      throw new BadRequestException(
+        'Please provide the current contact information.'
+      );
+    }
+
+    if (user.phone !== input.currentContact) {
+      throw new NotFoundException(
+        'Current contact information does not match.'
+      );
+    }
+
+    user.phone = input.newContact;
+    await userRepository.save(user);
+
+    return user;
+  }
+
+  async manageAddress(
+    ctx: RequestContext,
+    title: string,
+    city: string,
+    street: string,
+    gps: string,
+    headers: Record<string, string | string[]>
+  ): Promise<CustomCustomer> {
+    console.log('Title:', title);
+    console.log('City:', city);
+    console.log('Street:', street);
+    console.log('GPS:', gps);
+  
+    // Verify the token
+    const decodedToken = this.authMiddleware.verifyToken(headers);
+    const userId = decodedToken.id;
+  
+    const userRepository = this.connection.getRepository(ctx, CustomCustomer);
+    const user = await userRepository.findOne({
+      where: { id: Number(userId) }
+    });
+  
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+  
+    // Update the address fields
+    user.addressTitle = title;
+    user.addressCity = city;
+    user.addressStreet = street;
+    user.addressGPS = gps;
+  
+    // Save the updated user and generate a token
+    const updatedUser = await userRepository.save(user);
+    return updatedUser;
+  }
+  
+  
 
   /**
    * Initiates a password reset process by generating an OTP and sending it via SMS.

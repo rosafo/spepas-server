@@ -112,6 +112,46 @@ export class CustomerResolver {
 
   @Mutation()
   @Transaction()
+  async changeContact(
+    @Ctx() ctx: RequestContext,
+    @Args('input')
+    input: {
+      currentContact: string;
+      newContact: string;
+      password: string;
+    }
+  ): Promise<CustomCustomer> {
+    const headers = convertHeaders(ctx.req?.headers || {});
+    return this.customerService.changeContact(ctx, input, headers);
+  }
+
+  @Mutation()
+  @Transaction()
+  async manageAddress(
+    @Ctx() ctx: RequestContext,
+    @Args('input')
+    input: {
+      title: string;
+      city: string;
+      password: string;
+      street: string;
+      gps: string;
+    }
+  ): Promise<CustomCustomer> {
+    const headers = convertHeaders(ctx.req?.headers || {});
+    const { title, city, street, gps } = input;
+    return this.customerService.manageAddress(
+      ctx,
+      title,
+      city,
+      street,
+      gps,
+      headers
+    );
+  }
+
+  @Mutation()
+  @Transaction()
   async verifyOtp(
     @Ctx() ctx: RequestContext,
     @Args('input') input: { otp: string }
