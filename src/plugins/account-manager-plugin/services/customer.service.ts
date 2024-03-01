@@ -12,6 +12,10 @@ import {
   UserInputError,
   Logger
 } from '@vendure/core';
+import {
+  BlobServiceClient,
+  StorageSharedKeyCredential
+} from '@azure/storage-blob';
 import { CustomCustomer } from '../entities/customer.entity';
 import { SmsService } from '../communication/sms/sms.service';
 import { EmailService } from '../communication/email/email.service';
@@ -49,6 +53,9 @@ export class CustomerService {
     ctx: RequestContext,
     input: { phone: string; password: string }
   ): Promise<{ success: boolean; message?: string }> {
+    const sender = 'mNotify';
+    const purpose = ['sending otp'];
+
     try {
       if (!input.phone || !input.password) {
         throw new BadRequestException('Phone and password are required');
@@ -64,6 +71,7 @@ export class CustomerService {
           'User with this phone number already exists'
         );
       }
+
       // Store the hashed password and phone number in the database
       const newUser = userRepository.create({
         phone: input.phone,
@@ -97,27 +105,72 @@ export class CustomerService {
   }
 
   /**
+   * Resends the OTP to the user's phone.
+   *
+   * @param {RequestContext} ctx - the request context
+   * @param {string} phone - the user's phone number
+   * @return {Promise<{ success: boolean; message?: string }>} - the result of OTP resend
+   */
+  async resendOtp(
+    ctx: RequestContext,
+    input: { phone: string }
+  ): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log(input.phone);
+      // Generate a new OTP
+      const generatedOtp = Math.floor(
+        100000 + Math.random() * 900000
+      ).toString();
+
+      // Update the OTP in the store or create a new entry if not exists
+      otpStore[input.phone] = {
+        identifier: input.phone,
+        otp: generatedOtp
+      };
+
+      // Send the new OTP via SMS
+      await this.smsService.sendOtpSms(input.phone, generatedOtp);
+
+      return {
+        success: true,
+        message: 'OTP resent successfully'
+      };
+    } catch (error) {
+      console.error('Failed to resend OTP:', error);
+      return {
+        success: false,
+        message: `${error}`
+      };
+    }
+  }
+
+  /**
    * Verify the provided OTP for password recovery.
    *
    * @param {RequestContext} ctx - the request context
    * @param {string} otp - the one-time password provided by the user
-   * @return {Promise<CustomCustomer>} the user object if OTP is valid
+   * @param {string} phoneNumber - the phone number associated with the OTP
+   * @return {Promise<{ token: string }>} the token if OTP is valid
    */
   async verifyOtp(
     ctx: RequestContext,
     input: { otp: string }
   ): Promise<{ token: string }> {
-    const storedOtpEntry = Object.values(otpStore).find(
-      (entry) => entry.otp === input.otp
-    );
+    const storedOtpEntryKey = Object.keys(otpStore).find((key) => {
+      otpStore[key].otp === input.otp;
+      return key;
+    });
 
     if (
-      !storedOtpEntry ||
-      typeof storedOtpEntry.otp !== 'string' ||
-      input.otp !== storedOtpEntry.otp
+      !storedOtpEntryKey ||
+      typeof otpStore[storedOtpEntryKey].otp !== 'string' ||
+      input.otp !== otpStore[storedOtpEntryKey].otp
     ) {
       throw new BadRequestException('Invalid OTP');
     }
+
+    const storedOtpEntry = otpStore[storedOtpEntryKey];
+
     // Get the customer associated with the OTP
     const userRepository = this.connection.getRepository(ctx, CustomCustomer);
     const user = await userRepository.findOne({
@@ -130,6 +183,8 @@ export class CustomerService {
     if (!user) {
       throw new NotFoundException(`User with OTP ${input.otp} not found`);
     }
+
+    delete otpStore[storedOtpEntryKey];
     // Generate and return a token
     const userId: string = user.id.toString();
     const token = createTemporalToken(userId);
@@ -215,27 +270,36 @@ export class CustomerService {
     const uploadedFile = file;
     const fileExtension = path.extname(uploadedFile.originalname);
     const fileName = `${uuidv4()}${fileExtension}`;
-    const uploadFolderPath = path.join(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      '..',
-      'static',
-      'assets',
-      'upload'
+
+    // Set up Azure Storage credentials
+    const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
+    const accountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY;    
+    const sharedKeyCredential = new StorageSharedKeyCredential(accountName??"", accountKey?? "");
+    
+    // Set up BlobServiceClient
+    const blobServiceClient = new BlobServiceClient(
+      `https://${accountName}.blob.core.windows.net`,
+      sharedKeyCredential
     );
-    const filePath = path.join(uploadFolderPath, fileName);
+
+    // Set up container client
+    const containerName = process.env.AZURE_BLOB_CONTAINER_NAME;
+    const containerClient = blobServiceClient.getContainerClient(containerName??"profile-pictures");
+
+    // Set up blob client
+    const blobClient = containerClient.getBlockBlobClient(fileName);
 
     try {
-      // Asynchronous file write operation
-      await fs.promises.writeFile(filePath, uploadedFile.buffer);
+      // Upload file to Azure Storage
+      await blobClient.uploadData(uploadedFile.buffer, {
+        blobHTTPHeaders: { blobContentType: uploadedFile.mimetype }
+      });
 
       const newAsset = new Asset();
       newAsset.name = fileName;
       newAsset.type = 'image';
       newAsset.size = uploadedFile.size;
-      newAsset.url = filePath;
+      newAsset.url = blobClient.url; 
       // Save the new Asset to get its ID
       const savedAsset = await newAsset.save();
       user.avatarId = savedAsset.id;
@@ -394,36 +458,29 @@ export class CustomerService {
     gps: string,
     headers: Record<string, string | string[]>
   ): Promise<CustomCustomer> {
-    console.log('Title:', title);
-    console.log('City:', city);
-    console.log('Street:', street);
-    console.log('GPS:', gps);
-  
     // Verify the token
     const decodedToken = this.authMiddleware.verifyToken(headers);
     const userId = decodedToken.id;
-  
+
     const userRepository = this.connection.getRepository(ctx, CustomCustomer);
     const user = await userRepository.findOne({
       where: { id: Number(userId) }
     });
-  
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
-  
+
     // Update the address fields
     user.addressTitle = title;
     user.addressCity = city;
     user.addressStreet = street;
     user.addressGPS = gps;
-  
+
     // Save the updated user and generate a token
     const updatedUser = await userRepository.save(user);
     return updatedUser;
   }
-  
-  
 
   /**
    * Initiates a password reset process by generating an OTP and sending it via SMS.

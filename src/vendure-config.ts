@@ -2,7 +2,7 @@ import {
   dummyPaymentHandler,
   DefaultJobQueuePlugin,
   VendureConfig,
-  LanguageCode
+  LanguageCode,
 } from '@vendure/core';
 import { defaultEmailHandlers, EmailPlugin } from '@vendure/email-plugin';
 import { AssetServerPlugin } from '@vendure/asset-server-plugin';
@@ -53,7 +53,7 @@ export const config: VendureConfig = {
     cookieOptions: {
       secret: process.env.COOKIE_SECRET
     },
-    requireVerification: true,
+    requireVerification: true
     // shopAuthenticationStrategy: [
     //   facebookAuthenticationStrategy,
     //   googleAuthenticationStrategy
@@ -64,7 +64,7 @@ export const config: VendureConfig = {
     type: 'better-sqlite3',
     // See the README.md "Migrations" section for an explanation of
     // the `synchronize` and `migrations` options.
-    synchronize: true,
+    synchronize: false,
     migrations: [path.join(__dirname, './migrations/*.+(js|ts)')],
     logging: false,
     database: path.join(__dirname, '../vendure.sqlite')
@@ -75,6 +75,35 @@ export const config: VendureConfig = {
   // When adding or altering custom field definitions, the database will
   // need to be updated. See the "Migrations" section in README.md.
   customFields: {
+    Product: [
+      { name: 'Make', type: 'string' },
+      { name: 'Model', type: 'string' },
+      { name: 'Year', type: 'int' },
+      { name: 'numStars', type: 'int' },
+      { name: 'averageRating', type: 'float' },
+      { name: 'CountryOfOrigin', type: 'string' },
+      {
+        name: 'Condition',
+        type: 'string',
+        options: [
+          {
+            value: 'New',
+            label: [{ languageCode: LanguageCode.en, value: 'New' }]
+          },
+          {
+            value: 'HomeUsed',
+            label: [{ languageCode: LanguageCode.en, value: 'Used' }]
+          },
+          {
+            value: 'SecondHand',
+            label: [{ languageCode: LanguageCode.en, value: 'Second Hand' }]
+          }
+        ]
+      },
+
+      { name: 'isFavorite', type: 'boolean' }
+    ],
+
     User: [
       {
         name: 'socialLoginToken',
@@ -101,13 +130,13 @@ export const config: VendureConfig = {
       platformFeeSKU: 'FEE'
     }),
     DefaultJobQueuePlugin.init({ useDatabaseForBuffer: true }),
-    
+
     ElasticsearchPlugin.init({
       host: process.env.ELASTICSEARCH_HOST,
       port: 9200,
-        ...elasticsearchOptions
+      ...elasticsearchOptions
     }),
-    
+
     EmailPlugin.init({
       devMode: true,
       outputPath: path.join(__dirname, '../static/email/test-emails'),
@@ -131,7 +160,8 @@ export const config: VendureConfig = {
         apiPort: 3000
       }
     }),
-    AccountManagerPlugin,
+    AccountManagerPlugin
     // SearchSortPlugin
   ]
 };
+

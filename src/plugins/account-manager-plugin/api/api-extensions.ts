@@ -7,9 +7,9 @@ export const customerApiExtensions = gql`
     email: String
     fullName: String
     addressTitle: String
-    addressCity: String
-    addressStreet: String
-    addressGPS:String
+    city: String
+    street: String
+    GPS: String
     createdAt: DateTime!
     updatedAt: DateTime!
     avatar: String
@@ -69,25 +69,29 @@ export const customerApiExtensions = gql`
     newPassword: String!
   }
 
-  input AddressInput{
-    title:String!
+  input AddressInput {
+    title: String!
     city: String
     street: String
     gps: String
   }
-
+  input resendOtpInput {
+    phone: String!
+  }
+  
   extend type Query {
     customer(id: ID!): CustomCustomer
   }
 
   extend type Mutation {
     initiateAccountCreation(input: InitiateAccountCreationInput!): OtpResult
+    resendOtp(input: resendOtpInput!): OtpResult
     completeAccountCreation(input: CompleteAccountCreationInput!): AuthResult
     uploadProfilePicture(file: Upload!): CustomCustomer
     customLogin(input: LoginInput!): AuthResult
     changePassword(oldPassword: String!, newPassword: String!): CustomCustomer
-    changeContact(input:ChangeContactInput!): CustomCustomer
-    manageAddress(input:AddressInput!): CustomCustomer
+    changeContact(input: ChangeContactInput!): CustomCustomer
+    manageAddress(input: AddressInput!): CustomCustomer
     verifyOtp(input: VerifyPasswordRecoveryOtpInput!): verifiedResponse
     initiatePasswordReset(input: InitiatePasswordResetInput!): OtpResult
     resetUserPassword(input: ResetPasswordInput!): CustomCustomer

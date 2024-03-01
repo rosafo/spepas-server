@@ -152,6 +152,14 @@ export class CustomerResolver {
 
   @Mutation()
   @Transaction()
+  async resendOtp(
+    @Ctx() ctx: RequestContext,
+    @Args('input') input: { phone: string }
+  ): Promise<{ success: boolean; message?: string }> {
+    return this.customerService.resendOtp(ctx, input);
+  }
+  @Mutation()
+  @Transaction()
   async verifyOtp(
     @Ctx() ctx: RequestContext,
     @Args('input') input: { otp: string }

@@ -8,11 +8,10 @@ import 'dotenv/config';
  */
 export const createToken = (userId: string): string => {
   const accessToken: string = sign({ id: userId }, process.env.JWT_SECRET || '', {
-    expiresIn: '7d',
+    expiresIn: '1d',
   });
   return accessToken;
 };
-
 
 /**
  * Generates jwt token for user to verify their account during the creation process.
@@ -21,7 +20,7 @@ export const createToken = (userId: string): string => {
  */
 export const createTemporalToken = (userId: string): string => {
   const accessToken: string = sign({ id: userId }, process.env.JWT_SECRET || '', {
-    expiresIn: '1h',
+    expiresIn: '10m', 
   });
   return accessToken;
 };
