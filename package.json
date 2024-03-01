@@ -27,6 +27,7 @@
     "@vendure/core": "2.1.6",
     "@vendure/elasticsearch-plugin": "^2.1.7",
     "@vendure/email-plugin": "2.1.6",
+    "@vendure/harden-plugin": "^2.1.7",
     "apollo-server-core": "^3.13.0",
     "axios": "^1.6.7",
     "better-sqlite3": "8.7.0",

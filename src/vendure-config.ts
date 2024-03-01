@@ -3,7 +3,9 @@ import {
   DefaultJobQueuePlugin,
   VendureConfig,
   LanguageCode,
+  UuidIdStrategy
 } from '@vendure/core';
+import { HardenPlugin } from '@vendure/harden-plugin';
 import { defaultEmailHandlers, EmailPlugin } from '@vendure/email-plugin';
 import { AssetServerPlugin } from '@vendure/asset-server-plugin';
 import { AdminUiPlugin } from '@vendure/admin-ui-plugin';
@@ -59,7 +61,9 @@ export const config: VendureConfig = {
     //   googleAuthenticationStrategy
     // ]
   },
-
+  entityOptions: {
+    entityIdStrategy: new UuidIdStrategy(),
+},
   dbConnectionOptions: {
     type: 'better-sqlite3',
     // See the README.md "Migrations" section for an explanation of
@@ -135,6 +139,11 @@ export const config: VendureConfig = {
       host: process.env.ELASTICSEARCH_HOST,
       port: 9200,
       ...elasticsearchOptions
+    }),
+
+    HardenPlugin.init({
+      maxQueryComplexity: 500,
+      apiMode: IS_DEV ? 'dev' : 'prod',
     }),
 
     EmailPlugin.init({

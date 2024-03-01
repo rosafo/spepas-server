@@ -48,13 +48,4 @@ export const elasticsearchOptions: ElasticsearchOptions = {
     'PRICE_LOW_TO_HIGH',
     'PRICE_HIGH_TO_LOW'
   ],
-  // indexMappingProperties: {
-  //   'vendure-products': {
-  //     properties: {
-  //       'createdAt': {
-  //         type: 'date'
-  //       }
-  //     }
-  //   }
-  // }
 };
