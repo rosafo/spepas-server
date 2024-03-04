@@ -19,7 +19,7 @@
     "node_modules",
     "migration.ts",
     "src/plugins/**/ui/*",
-    "admin-ui"
+    "__admin-ui"
   ],
   "include": ["src/**/*.ts"],
   "ts-node": {

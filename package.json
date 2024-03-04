@@ -1,10 +1,10 @@
 {
-  "name": "spe-spas-backend",
+  "name": "spepas",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev:server": "nodemon --exec ts-node ./src/index.ts",
-    "dev:worker": "nodemon --exec ts-node ./src/index-worker.ts",
+    "dev:server": "ts-node ./src/index.ts",
+    "dev:worker": "ts-node ./src/index-worker.ts",
     "dev": "concurrently npm:dev:*",
     "build": "tsc",
     "start:server": "node ./dist/index.js",
@@ -21,6 +21,8 @@
     "@nestjs/mapped-types": "^2.0.4",
     "@nestjs/platform-express": "^10.3.1",
     "@nestjs/swagger": "^7.3.0",
+    "@pinelab/vendure-plugin-facet-suggestions": "^1.0.0",
+    "@pinelab/vendure-plugin-google-storage-assets": "^1.1.0",
     "@types/multer": "^1.4.11",
     "@vendure/admin-ui-plugin": "2.1.6",
     "@vendure/asset-server-plugin": "2.1.6",
@@ -47,6 +49,7 @@
     "@types/graphql-upload": "^16.0.7",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/uuid": "^9.0.8",
+    "@vendure/ui-devkit": "^2.1.7",
     "concurrently": "8.2.2",
     "ts-node": "10.9.2"
   }

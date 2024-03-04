@@ -1,25 +1,25 @@
 import {
   dummyPaymentHandler,
   DefaultJobQueuePlugin,
+  DefaultSearchPlugin,
   VendureConfig,
-  LanguageCode,
-  UuidIdStrategy
+  LanguageCode
 } from '@vendure/core';
-import { HardenPlugin } from '@vendure/harden-plugin';
 import { defaultEmailHandlers, EmailPlugin } from '@vendure/email-plugin';
 import { AssetServerPlugin } from '@vendure/asset-server-plugin';
 import { AdminUiPlugin } from '@vendure/admin-ui-plugin';
-import { ElasticsearchPlugin } from '@vendure/elasticsearch-plugin';
-import { AccountManagerPlugin } from './plugins/account-manager-plugin/account.manager.plugin';
-import { MultivendorPlugin } from './plugins/multivendor-plugin/multivendor.plugin';
-import { elasticsearchOptions } from './elasticsearch-options';
-import { GoogleAuthPlugin } from './plugins/google-auth/google-auth-plugin';
 import 'dotenv/config';
 import path from 'path';
-import { SearchSortPlugin } from './plugins/search-sort-plugin/search-sort-plugin';
+import { AccountManagerPlugin } from './plugins/account-manager-plugin/account.manager.plugin';
+import {FacetSuggestionsPlugin}from '@pinelab/vendure-plugin-facet-suggestions'
+import { compileUiExtensions } from '@vendure/ui-devkit/compiler';
+import { GoogleStoragePlugin, GoogleStorageStrategy } from '@pinelab/vendure-plugin-google-storage-assets'
+import { GoogleAuthPlugin } from './plugins/google-auth/google-auth-plugin';
+import { MultivendorPlugin } from './plugins/multivendor-plugin/multivendor.plugin';
 
-const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const IS_DEV = process.env.APP_ENV === 'dev';
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+
 export const config: VendureConfig = {
   apiOptions: {
     port: 3000,
@@ -54,25 +54,29 @@ export const config: VendureConfig = {
     },
     cookieOptions: {
       secret: process.env.COOKIE_SECRET
-    },
-    requireVerification: true
-    // shopAuthenticationStrategy: [
-    //   facebookAuthenticationStrategy,
-    //   googleAuthenticationStrategy
-    // ]
+    }
   },
-  entityOptions: {
-    entityIdStrategy: new UuidIdStrategy(),
-},
   dbConnectionOptions: {
-    type: 'better-sqlite3',
+    type: 'postgres',
     // See the README.md "Migrations" section for an explanation of
     // the `synchronize` and `migrations` options.
-    synchronize: false,
+    synchronize: true,
     migrations: [path.join(__dirname, './migrations/*.+(js|ts)')],
     logging: false,
-    database: path.join(__dirname, '../vendure.sqlite')
+    database: process.env.DB_NAME,
+    schema: process.env.DB_SCHEMA,
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT),
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    ssl: true,
+    extra: {
+      ssl: {
+        rejectUnauthorized: true
+      }
+    }
   },
+
   paymentOptions: {
     paymentMethodHandlers: [dummyPaymentHandler]
   },
@@ -107,7 +111,6 @@ export const config: VendureConfig = {
 
       { name: 'isFavorite', type: 'boolean' }
     ],
-
     User: [
       {
         name: 'socialLoginToken',
@@ -116,8 +119,21 @@ export const config: VendureConfig = {
       }
     ]
   },
-
   plugins: [
+    AssetServerPlugin.init({
+      storageStrategyFactory: () =>
+        new GoogleStorageStrategy({
+          bucketName: 'your-bucket-name',
+          thumbnails: {
+            width: 500,
+            height: 500
+          },
+          useAssetServerForAdminUi: false
+        }),
+      route: 'assets',
+      assetUploadDir: '/tmp/vendure/assets'
+    }),
+    GoogleStoragePlugin,
     AssetServerPlugin.init({
       route: 'assets',
       assetUploadDir: path.join(__dirname, '../static/assets'),
@@ -126,26 +142,15 @@ export const config: VendureConfig = {
       // to be set manually to match your production url.
       assetUrlPrefix: IS_DEV ? undefined : 'https://www.my-shop.com/assets/'
     }),
+    DefaultJobQueuePlugin.init({ useDatabaseForBuffer: true }),
     GoogleAuthPlugin.init({
-      clientId: googleClientId
+      clientId: googleClientId as string
     }),
     MultivendorPlugin.init({
       platformFeePercent: 10,
       platformFeeSKU: 'FEE'
     }),
-    DefaultJobQueuePlugin.init({ useDatabaseForBuffer: true }),
-
-    ElasticsearchPlugin.init({
-      host: process.env.ELASTICSEARCH_HOST,
-      port: 9200,
-      ...elasticsearchOptions
-    }),
-
-    HardenPlugin.init({
-      maxQueryComplexity: 500,
-      apiMode: IS_DEV ? 'dev' : 'prod',
-    }),
-
+    DefaultSearchPlugin.init({ bufferUpdates: false, indexStockStatus: true }),
     EmailPlugin.init({
       devMode: true,
       outputPath: path.join(__dirname, '../static/email/test-emails'),
@@ -162,15 +167,17 @@ export const config: VendureConfig = {
           'http://localhost:8080/verify-email-address-change'
       }
     }),
+    FacetSuggestionsPlugin,
     AdminUiPlugin.init({
-      route: 'admin',
       port: 3002,
-      adminUiConfig: {
-        apiPort: 3000
-      }
+      route: 'admin',
+      app: compileUiExtensions({
+        outputPath: path.join(__dirname, '__admin-ui'),
+        extensions: [FacetSuggestionsPlugin.ui],
+        devMode: true
+      })
     }),
     AccountManagerPlugin
-    // SearchSortPlugin
+    
   ]
 };
-
