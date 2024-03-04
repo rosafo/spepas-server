@@ -9,30 +9,8 @@ services:
     command: ["npm", "run", "start:server"]
     volumes:
       - /usr/src/app
-    environment:
-      - APP_ENV=dev
-      - COOKIE_SECRET=qldyytgeet
-      - SUPERADMIN_USERNAME=superadmin
-      - SUPERADMIN_PASSWORD=superadmin
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_NAME=${DB_NAME}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_SCHEMA=${DB_SCHEMA}
-      - JWT_SECRET=VbA49GS2i0Pchop8sLz5mCmoneyxj1N0hF7eR9fgj
-      - FACEBOOK_APP_ID=1565872180850159
-      - FACEBOOK_APP_SECRET=fa28080ca22a1fedabba64ba0c85befe
-      - GOOGLE_CLIENT_ID=901341628519-o0vhnmkgrv2uk4v4merf2v2c3hap871b.apps.googleusercontent.com
-      - SMS_API_KEY=QVFXQXltYVVoRW9RQnRJelNQV00
-      - EMAIL_USER=samiblaq8@gmail.com
-      - EMAIL_PASSWORD=zgzamfqkcybcxays
-      - CLIENT_SECRET=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
-      - ELASTICSEARCH_HOST=http://localhost
-      - ELASTICSEARCH_PORT=9200
-      - AZURE_STORAGE_ACCOUNT_NAME=your-storage-account-name
-      - AZURE_STORAGE_ACCOUNT_KEY=your-storage-account-key
-      - AZURE_BLOB_CONTAINER_NAME=your-blob-container-name
+    env_file:
+      - .env  
   worker:
     build:
       context: .
@@ -40,30 +18,8 @@ services:
     command: ["npm", "run", "start:worker"]
     volumes:
       - /usr/src/app
-    environment:
-      - APP_ENV=dev
-      - COOKIE_SECRET=qldyytgeet
-      - SUPERADMIN_USERNAME=superadmin
-      - SUPERADMIN_PASSWORD=superadmin
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_NAME=${DB_NAME}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_SCHEMA=${DB_SCHEMA}
-      - JWT_SECRET=VbA49GS2i0Pchop8sLz5mCmoneyxj1N0hF7eR9fgj
-      - FACEBOOK_APP_ID=1565872180850159
-      - FACEBOOK_APP_SECRET=fa28080ca22a1fedabba64ba0c85befe
-      - GOOGLE_CLIENT_ID=901341628519-o0vhnmkgrv2uk4v4merf2v2c3hap871b.apps.googleusercontent.com
-      - SMS_API_KEY=QVFXQXltYVVoRW9RQnRJelNQV00
-      - EMAIL_USER=samiblaq8@gmail.com
-      - EMAIL_PASSWORD=zgzamfqkcybcxays
-      - CLIENT_SECRET=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
-      - ELASTICSEARCH_HOST=http://localhost
-      - ELASTICSEARCH_PORT=9200
-      - AZURE_STORAGE_ACCOUNT_NAME=your-storage-account-name
-      - AZURE_STORAGE_ACCOUNT_KEY=your-storage-account-key
-      - AZURE_BLOB_CONTAINER_NAME=your-blob-container-name
+    env_file:
+      - .env  
   database:
     image: postgres
     volumes:
