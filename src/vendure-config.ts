@@ -90,6 +90,8 @@ export const config: VendureConfig = {
       { name: 'numStars', type: 'int' },
       { name: 'averageRating', type: 'float' },
       { name: 'CountryOfOrigin', type: 'string' },
+      { name: 'PiecesInStock', type: 'string' },
+      { name: 'Price', type: 'float' },
       {
         name: 'Condition',
         type: 'string',

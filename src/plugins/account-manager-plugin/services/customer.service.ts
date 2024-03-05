@@ -517,7 +517,7 @@ export class CustomerService {
     ctx: RequestContext,
     newPassword: string,
     headers: Record<string, string | string[]>
-  ): Promise<CustomCustomer> {
+  ): Promise<{ success: boolean; message?: string }> {
     const decodedToken = this.authMiddleware.verifyToken(headers);
     const userId = decodedToken.id;
 
@@ -532,7 +532,10 @@ export class CustomerService {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
-    const updatedUser = await userRepository.save(user);
-    return updatedUser;
+     await userRepository.save(user);
+    return {
+      success: true,
+      message: 'Password reset successfully'
+    };
   }
 }

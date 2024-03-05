@@ -182,7 +182,7 @@ export class CustomerResolver {
   async resetUserPassword(
     @Ctx() ctx: RequestContext,
     @Args('newPassword') newPassword: string
-  ): Promise<CustomCustomer> {
+  ): Promise<{ success: boolean; message?: string }> {
     const headers = convertHeaders(ctx.req?.headers || {});
     return this.customerService.resetUserPassword(ctx, newPassword, headers);
   }

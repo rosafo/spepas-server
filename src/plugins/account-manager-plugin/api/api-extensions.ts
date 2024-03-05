@@ -94,6 +94,6 @@ export const customerApiExtensions = gql`
     manageAddress(input: AddressInput!): CustomCustomer
     verifyOtp(input: VerifyPasswordRecoveryOtpInput!): verifiedResponse
     initiatePasswordReset(input: InitiatePasswordResetInput!): OtpResult
-    resetUserPassword(input: ResetPasswordInput!): CustomCustomer
+    resetUserPassword(input: ResetPasswordInput!): OtpResult
   }
 `;
