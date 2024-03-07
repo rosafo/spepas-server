@@ -28,7 +28,6 @@ import {
 
 import { multivendorShippingEligibilityChecker } from '../config/multivendor-shipping-eligibility-checker';
 import { CreateSellerInput } from '../types';
-
 @Injectable()
 export class MultivendorService {
   constructor(
@@ -40,13 +39,14 @@ export class MultivendorService {
     private configService: ConfigService,
     private stockLocationService: StockLocationService,
     private requestContextService: RequestContextService,
-    private connection: TransactionalConnection
+    private connection: TransactionalConnection,
   ) {}
 
   async registerNewSeller(
     ctx: RequestContext,
     input: { shopName: string; seller: CreateSellerInput }
   ) {
+
     const superAdminCtx = await this.getSuperAdminContext(ctx);
     const channel = await this.createSellerChannelRoleAdmin(
       superAdminCtx,
@@ -160,6 +160,7 @@ export class MultivendorService {
         connectedAccountId: Math.random().toString(30).substring(3)
       }
     });
+    
     const channel = await this.channelService.create(ctx, {
       code: shopCode,
       sellerId: seller.id,
@@ -167,9 +168,10 @@ export class MultivendorService {
       currencyCode: defaultChannel.defaultCurrencyCode,
       defaultLanguageCode: defaultChannel.defaultLanguageCode,
       pricesIncludeTax: defaultChannel.pricesIncludeTax,
-      defaultShippingZoneId: defaultChannel.defaultShippingZone.id,
-      defaultTaxZoneId: defaultChannel.defaultTaxZone.id
+      defaultShippingZoneId: defaultChannel.defaultShippingZone?.id,
+      defaultTaxZoneId: defaultChannel.defaultTaxZone?.id, 
     });
+    
     if (isGraphQlErrorResult(channel)) {
       throw new InternalServerError(channel.message);
     }

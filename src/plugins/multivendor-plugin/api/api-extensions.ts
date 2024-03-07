@@ -4,7 +4,7 @@ export const shopApiExtensions = gql`
     input CreateSellerInput {
         firstName: String!
         lastName: String!
-        emailAddress: String!
+        emailAddress: String
         password: String!
     }
 

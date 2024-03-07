@@ -3,7 +3,8 @@ import {
   DefaultJobQueuePlugin,
   DefaultSearchPlugin,
   VendureConfig,
-  LanguageCode
+  LanguageCode,
+  Asset
 } from '@vendure/core';
 import { defaultEmailHandlers, EmailPlugin } from '@vendure/email-plugin';
 import { AssetServerPlugin } from '@vendure/asset-server-plugin';
@@ -11,11 +12,15 @@ import { AdminUiPlugin } from '@vendure/admin-ui-plugin';
 import 'dotenv/config';
 import path from 'path';
 import { AccountManagerPlugin } from './plugins/account-manager-plugin/account.manager.plugin';
-import {FacetSuggestionsPlugin}from '@pinelab/vendure-plugin-facet-suggestions'
+import { FacetSuggestionsPlugin } from '@pinelab/vendure-plugin-facet-suggestions';
 import { compileUiExtensions } from '@vendure/ui-devkit/compiler';
-import { GoogleStoragePlugin, GoogleStorageStrategy } from '@pinelab/vendure-plugin-google-storage-assets'
+import {
+  GoogleStoragePlugin,
+  GoogleStorageStrategy
+} from '@pinelab/vendure-plugin-google-storage-assets';
 import { GoogleAuthPlugin } from './plugins/google-auth/google-auth-plugin';
 import { MultivendorPlugin } from './plugins/multivendor-plugin/multivendor.plugin';
+import { SellerPlugin } from './plugins/seller-plugin/seller.plugin';
 
 const IS_DEV = process.env.APP_ENV === 'dev';
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
@@ -179,7 +184,7 @@ export const config: VendureConfig = {
         devMode: true
       })
     }),
-    AccountManagerPlugin
-    
+    AccountManagerPlugin,
+    SellerPlugin
   ]
 };

@@ -6,20 +6,7 @@ import { Ctx, RequestContext, Transaction, ID } from '@vendure/core';
 
 import { CustomerService } from '../services/customer.service';
 import { CustomCustomer } from '../entities/customer.entity';
-import { IncomingHttpHeaders } from 'http';
-
-function convertHeaders(
-  headers: IncomingHttpHeaders
-): Record<string, string[]> {
-  return Object.entries(headers).reduce((acc, [key, value]) => {
-    if (Array.isArray(value)) {
-      acc[key] = value.filter((v) => typeof v === 'string') as string[];
-    } else if (typeof value === 'string') {
-      acc[key] = [value];
-    }
-    return acc;
-  }, {} as Record<string, string[]>);
-}
+import { convertHeaders} from '../../utils/helper'
 
 export type InitiateAccountCreationInput = {
   phone: string;
