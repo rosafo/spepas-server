@@ -16,7 +16,7 @@
     "types": ["node", "graphql-upload"]
   },
   "exclude": ["node_modules", "migration.ts", "__admin-ui"],
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts","src/**/*.tsx"],
   "ts-node": {
     "files": true
   }

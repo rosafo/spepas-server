@@ -126,7 +126,7 @@ export const config: VendureConfig = {
       }
     ]
   },
-  plugins: [
+    plugins: [
     AssetServerPlugin.init({
       storageStrategyFactory: () =>
         new GoogleStorageStrategy({
@@ -180,9 +180,20 @@ export const config: VendureConfig = {
       route: 'admin',
       app: compileUiExtensions({
         outputPath: path.join(__dirname, '__admin-ui'),
-        extensions: [FacetSuggestionsPlugin.ui],
+        extensions: [
+          FacetSuggestionsPlugin.ui,
+          {
+            id: 'test-extension',
+            extensionPath: path.join(__dirname, 'plugins/seller-plugin/ui'),
+            providers: ['providers.ts'],
+            routes: [{ route: 'greet', filePath: 'routes.ts' }]
+          }
+        ],
         devMode: true
-      })
+      }),
+      adminUiConfig: {
+        apiPort: 3000
+      }
     }),
     AccountManagerPlugin,
     SellerPlugin
