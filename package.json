@@ -12,7 +12,8 @@
     "start": "concurrently npm:start:*",
     "migration:generate": "ts-node migration generate",
     "migration:run": "ts-node migration run",
-    "migration:revert": "ts-node migration revert"
+    "migration:revert": "ts-node migration revert",
+    "compile-ui":"ts-node ./src/compile-admin-ui.ts"
   },
   "dependencies": {
     "@azure/storage-blob": "^12.17.0",
@@ -48,6 +49,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/graphql-upload": "^16.0.7",
     "@types/jsonwebtoken": "^9.0.5",
+    "@types/react": "^18.2.64",
     "@types/uuid": "^9.0.8",
     "@vendure/ui-devkit": "^2.1.7",
     "concurrently": "8.2.2",

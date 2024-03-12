@@ -6,7 +6,7 @@ export const SellerApiExtensions = gql`
     emailAddress: String
     phone: String!
     TIN: String!
-    businessRegistratonFile: Upload
+    businessRegistrationFile: Upload
     profilePicture: Upload
     shopAddress: String!
     aboutShop: String!
@@ -28,7 +28,7 @@ export const SellerApiExtensions = gql`
     emailAddress: String
     phone: String!
     TIN: String!
-    businessRegistratonFile: String
+    businessRegistrationFile: String
     profilePicture: String
     shopAddress: String!
     aboutShop: String!

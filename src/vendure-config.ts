@@ -174,25 +174,12 @@ export const config: VendureConfig = {
           'http://localhost:8080/verify-email-address-change'
       }
     }),
-    FacetSuggestionsPlugin,
+    // FacetSuggestionsPlugin,
     AdminUiPlugin.init({
-      port: 3002,
       route: 'admin',
-      app: compileUiExtensions({
-        outputPath: path.join(__dirname, '__admin-ui'),
-        extensions: [
-          FacetSuggestionsPlugin.ui,
-          {
-            id: 'test-extension',
-            extensionPath: path.join(__dirname, 'plugins/seller-plugin/ui'),
-            providers: ['providers.ts'],
-            routes: [{ route: 'greet', filePath: 'routes.ts' }]
-          }
-        ],
-        devMode: true
-      }),
-      adminUiConfig: {
-        apiPort: 3000
+      port: 3002,
+      app: {
+         path: path.join(__dirname, '/admin-ui/dist'),
       }
     }),
     AccountManagerPlugin,
