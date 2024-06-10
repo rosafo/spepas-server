@@ -1,14 +1,15 @@
-import { MiddlewareConsumer, Module } from '@nestjs/common';
-import { Asset, LanguageCode, PluginCommonModule, RequestContext, VendurePlugin } from '@vendure/core';
-import { MulterMiddleware } from '../utils/multer.middleware';
-import { AuthMiddleware } from '../utils/auth.middleware';
-import { CustomCustomer } from './entities/customer.entity';
-import { customerApiExtensions } from './api/api-extensions';
-import { CustomerResolver } from './api/customer.resolver';
-import { CustomerService } from './services/customer.service';
+import {
+  PluginCommonModule,
+  RequestContext,
+  VendurePlugin
+} from '@vendure/core';
+import { AuthMiddleware } from '../../middlewares/auth.middleware';
+import { CustomUser } from './entities/user.entity';
+import { UserApiExtensions } from './api/api-extensions';
+import { UserResolver } from './api/account.manager.resolver';
+import { UserService } from './services/account.manager.service';
 import { SmsService } from './communication/sms/sms.service';
 import { EmailService } from './communication/email/email.service';
-
 
 interface CustomRequestContext extends RequestContext {
   AuthMiddleware: AuthMiddleware;
@@ -16,31 +17,17 @@ interface CustomRequestContext extends RequestContext {
 
 @VendurePlugin({
   imports: [PluginCommonModule],
-  entities: [CustomCustomer],
-  providers: [CustomerService, SmsService, EmailService, AuthMiddleware],
+  entities: [CustomUser],
+  providers: [UserService, SmsService, EmailService, AuthMiddleware],
   shopApiExtensions: {
-    schema: customerApiExtensions,
-    resolvers: [CustomerResolver]
+    schema: UserApiExtensions,
+    resolvers: [UserResolver]
   },
-  configuration: (config) => {
-    config.customFields.Customer.push({
-      name: 'avatar',
-      type: 'relation',
-      label: [{ languageCode: LanguageCode.en, value: 'Customer avatar' }],
-      entity: Asset,
-      nullable: true
-    });
-
-    return config;
-  }
+  compatibility: '^2.0.0'
 })
 export class AccountManagerPlugin {
   static init(options: any) {
     return AccountManagerPlugin;
-  }
-
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(MulterMiddleware).forRoutes('uploadProfilePicture');
   }
 
   configureCtx(ctx: CustomRequestContext) {

@@ -14,11 +14,9 @@ export class SmsService {
     const message = {
       text: `Your OTP is ${otp}.Do NOT share this code with anyone`
     };
-    
+
     try {
-      // Construct the SMS API endpoint with the correct API key included
       const smsApiEndpoint = `${this.url}/?action=send-sms&api_key=${this.api_key}&to=${phoneNumber}&from=${this.senderId}&sms=${message.text}`;
-      // Send the SMS using Axios or your preferred HTTP client
       const result = await axios.get(smsApiEndpoint);
       return result.data;
     } catch (error) {

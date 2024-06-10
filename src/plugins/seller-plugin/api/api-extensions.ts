@@ -1,50 +1,55 @@
 import gql from 'graphql-tag';
 
-export const SellerApiExtensions = gql`
-  input SellerInput {
-    fullName: String!
-    emailAddress: String
-    phone: String!
-    TIN: String!
-    businessRegistrationFile: Upload
-    profilePicture: Upload
-    shopAddress: String!
-    aboutShop: String!
-    password: String
-  }
-
-  input createSellerInput {
-    shopName: String!
-    seller: SellerInput!
-  }
-
-  type CreateSellerPayload {
-    message: String!
-  }
-
-  type CustomSeller {
+export const commonApiExtensions = gql`
+  type CustomSeller implements Node {
     id: ID!
     fullName: String!
+    shopName: String!
     emailAddress: String
     phone: String!
     TIN: String!
-    businessRegistrationFile: String
-    profilePicture: String
+    businessRegistrationFile: Asset
+    profilePicture: Asset
     shopAddress: String!
     aboutShop: String!
     password: String
     status: String
+    offers: [productOffer]
   }
 
-  extend type Mutation {
-    createNewSeller(input: createSellerInput!): CreateSellerPayload!
+  type productOffer implements Node {
+    id: ID!
+    price: Float!
+    deliveryTime: String!
+    offerImage: Asset!
+    status: String!
+    createdAt: DateTime!
+    updatedAt: DateTime!
   }
+ 
+`;
 
-  extend type Mutation {
-    processSellerRequest(id: ID!, decision: String!): CreateSellerPayload!
+export const shopApiExtensions = gql`
+  ${commonApiExtensions}
+
+  extend type Query {
+    getSeller: CustomSeller!
+
+  }
+`;
+
+export const adminApiExtensions = gql`
+  ${commonApiExtensions}
+
+  type CreateSellerRespond {
+    message: String!
   }
 
   extend type Query {
     pendingSellers: [CustomSeller!]!
+  }
+
+  extend type Mutation {
+    processSellerRequest(id: ID!, decision: String!): CreateSellerRespond!
   }
 `;

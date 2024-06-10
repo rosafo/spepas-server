@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "jsx": "react",
     "module": "commonjs",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -12,18 +11,21 @@
     "sourceMap": false,
     "skipLibCheck": true,
     "outDir": "./dist",
-    "baseUrl": "./",
-    "typeRoots": ["node_modules/@types"],
-    "types": ["node", "graphql-upload"]
+    "baseUrl": "./src",
+    "paths": {
+      "@utils/*": [
+        "utils/*"
+      ]
+    }
   },
+  "include": [
+    "src/**/*",
+    "admin-ui"
+  ],
   "exclude": [
     "node_modules",
-    "migration.ts",
-    "src/plugins/**/ui/*",
-    "src/admin-ui"
+    "migration.ts"
   ],
-
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "ts-node": {
     "files": true
   }

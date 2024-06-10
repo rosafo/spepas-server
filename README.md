@@ -1,4 +1,4 @@
-# spepas
+# spepas-api-v1
 
 This project was generated with [`@vendure/create`](https://github.com/vendure-ecommerce/vendure/tree/master/packages/create).
 
@@ -89,15 +89,23 @@ database may be orchestrated with Docker Compose.
 In Vendure, your custom functionality will live in [plugins](https://www.vendure.io/docs/plugins/).
 These should be located in the `./src/plugins` directory.
 
+To create a new plugin run:
+
+```
+npx vendure add
+```
+
+and select `[Plugin] Create a new Vendure plugin`.
+
 ## Migrations
 
 [Migrations](https://www.vendure.io/docs/developer-guide/migrations/) allow safe updates to the database schema. Migrations
 will be required whenever you make changes to the `customFields` config or define new entities in a plugin.
 
-The following npm scripts can be used to generate migrations:
+To generate a new migration, run:
 
 ```
-npm run migration:generate [name]
+npx vendure migrate
 ```
 
 The generated migration file will be found in the `./src/migrations/` directory, and should be committed to source control.
@@ -111,14 +119,4 @@ data that you cannot lose.
 
 ---
 
-You can also run any pending migrations manually, without starting the server by running:
-
-```
-npm run migration:run
-```
-
-You can revert the most recently-applied migration with:
-
-```
-npm run migration:revert
-```
+You can also run any pending migrations manually, without starting the server via the "vendure migrate" command.

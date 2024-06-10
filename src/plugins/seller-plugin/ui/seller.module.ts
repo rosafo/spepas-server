@@ -5,7 +5,7 @@ import {  PendingSellersComponent } from './PendingSeller.component';
 
 @NgModule({
   imports: [
-    SharedModule, 
+    SharedModule,
     RouterModule.forChild([
       {
         path: '',
@@ -17,5 +17,6 @@ import {  PendingSellersComponent } from './PendingSeller.component';
   ],
   declarations: [PendingSellersComponent]
 })
+
 
 export class PendingSellerModule {}

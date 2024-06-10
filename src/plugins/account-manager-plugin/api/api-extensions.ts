@@ -1,18 +1,26 @@
 import gql from 'graphql-tag';
 
-export const customerApiExtensions = gql`
-  type CustomCustomer implements Node {
+export const UserApiExtensions = gql`
+  type CustomUser implements Node {
     id: ID!
     phone: String
     email: String
     fullName: String
-    addressTitle: String
-    city: String
-    street: String
-    GPS: String
+    avatar: Asset
+    roles: [String!]!
     createdAt: DateTime!
     updatedAt: DateTime!
-    avatar: String
+  }
+
+  enum UserRole {
+    CUSTOMER
+    RIDER
+    SELLER
+  }
+
+  type AuthResult {
+    token: String!
+    user: CustomUser!
   }
 
   type OtpResult {
@@ -20,26 +28,36 @@ export const customerApiExtensions = gql`
     message: String
   }
 
-  type AuthResult {
-    token: String!
-    user: CustomCustomer!
-  }
-
-  type verifiedResponse {
+  type VerifiedResponse {
     token: String!
   }
 
+  input OtpInput {
+    otp: String!
+  }
+  input resendOtpInput {
+    phone: String!
+  }
+  input InitiatePasswordResetInput {
+    identifier: String!
+  }
+  input ResetPasswordInput {
+    newPassword: String!
+  }
   input LoginInput {
     identifier: String!
     password: String!
   }
-
+  input ChangePasswordInput {
+    oldPassword: String!
+    newPassword: String!
+  }
   input InitiateAccountCreationInput {
     phone: String!
     password: String!
   }
-
-  input CompleteAccountCreationInput {
+  
+  input CustomerInput {
     fullName: String!
     city: String!
     street: String!
@@ -47,53 +65,68 @@ export const customerApiExtensions = gql`
     profilePicture: Upload
   }
 
-  input PasswordRecoveryInput {
-    identifier: String!
+  input createRiderInput {
+    fullName: String!
+    phone: String!
+    vehicleRegistrationFile: Upload!
+    profilePicture: Upload
+    nationalIdCard: Upload!
+    vehicleType: String!
+    status: String
   }
 
-  input VerifyPasswordRecoveryOtpInput {
-    otp: String!
+  input SellerInput {
+    fullName: String!
+    emailAddress: String
+    phone: String!
+    TIN: String!
+    businessRegistrationFile: Upload
+    profilePicture: Upload
+    shopAddress: String!
+    aboutShop: String!
   }
-
-  input InitiatePasswordResetInput {
-    identifier: String!
-  }
-
+  
   input ChangeContactInput {
     currentContact: String!
     newContact: String!
     password: String!
   }
 
-  input ResetPasswordInput {
-    newPassword: String!
+  input createSellerInput {
+    shopName: String!
+    seller: SellerInput!
   }
 
-  input AddressInput {
-    title: String!
-    city: String
-    street: String
-    gps: String
+  input CompleteAccountCreationInput {
+    role: UserRole!
+    customer: CustomerInput
+    rider: createRiderInput
+    seller: createSellerInput
   }
-  input resendOtpInput {
-    phone: String!
+
+  type CompleteAccountCreationResponse {
+    success: Boolean
+    message: String
+    token: String
   }
-  
+
   extend type Query {
-    customer(id: ID!): CustomCustomer
+    getCurrentUser: CustomUser
   }
 
   extend type Mutation {
+    customLogin(input: LoginInput!): AuthResult
+    switchAccount(newRole: UserRole!): AuthResult
     initiateAccountCreation(input: InitiateAccountCreationInput!): OtpResult
     resendOtp(input: resendOtpInput!): OtpResult
-    completeAccountCreation(input: CompleteAccountCreationInput!): AuthResult
-    uploadProfilePicture(file: Upload!): CustomCustomer
-    customLogin(input: LoginInput!): AuthResult
-    changePassword(oldPassword: String!, newPassword: String!): CustomCustomer
-    changeContact(input: ChangeContactInput!): CustomCustomer
-    manageAddress(input: AddressInput!): CustomCustomer
-    verifyOtp(input: VerifyPasswordRecoveryOtpInput!): verifiedResponse
+    createAccount(
+      input: CompleteAccountCreationInput!
+    ): CompleteAccountCreationResponse
+    uploadProfilePicture(file: Upload!): Asset
+    verifyOtp(input: OtpInput!): VerifiedResponse
     initiatePasswordReset(input: InitiatePasswordResetInput!): OtpResult
     resetUserPassword(input: ResetPasswordInput!): OtpResult
+    changePassword(input: ChangePasswordInput!): CustomUser
+    changeContact(input: ChangeContactInput!): CustomUser
   }
 `;

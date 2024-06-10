@@ -2,62 +2,69 @@ import { Injectable } from '@nestjs/common';
 import {
   RequestContext,
   TransactionalConnection,
-  RequestContextService
+  RequestContextService,
+  isGraphQlErrorResult,
+  AssetService
 } from '@vendure/core';
 import { CustomSeller } from '../entities/seller.entity';
 import { SellerInput } from '../types';
-import { SmsService } from '../communication/sms/sms.service';
+import { SmsService } from '../../../utils/communication/sms/sms.service';
 import { MultivendorService } from '../../multivendor-plugin/services/multi.vendor.service';
-import {generatePassword} from '../../utils/helper'
+import { generatePassword } from '../../../utils/helper';
+import { AuthMiddleware } from '../../../middlewares/auth.middleware';
+
 @Injectable()
 export class CustomSellerService {
   constructor(
     private connection: TransactionalConnection,
     private smsService: SmsService,
     private requestContextService: RequestContextService,
-    private multivendorService: MultivendorService
+    private assetService: AssetService,
+    private multivendorService: MultivendorService,
+    private readonly authMiddleware: AuthMiddleware
+
   ) {}
 
-  async createNewSeller(
-    ctx: RequestContext,
-    input: { shopName: string; seller: SellerInput }
-  ): Promise<string> {
-    const {
-      fullName,
-      emailAddress,
-      phone,
-      TIN,
-      shopAddress,
-      aboutShop,
-    } = input.seller;
-
-    // Create a new CustomSeller entity with the submitted details
-    const newSeller = new CustomSeller();
-    newSeller.shopName = input.shopName;
-    newSeller.fullName = fullName;
-    newSeller.emailAddress = emailAddress;
-    newSeller.phone = phone;
-    newSeller.TIN = TIN;
-    newSeller.shopAddress = shopAddress;
-    newSeller.aboutShop = aboutShop;
-    // Save the seller entity
-    await this.connection.getRepository(ctx, CustomSeller).save(newSeller);
-
-    // Send SMS notification to the seller
-    const message =
-      'Your details have been successfully submitted. We will review them and get back to you as soon as possible. Thank you for your submission!';
-    await this.smsService.sendSms(phone, message);
-
-    return 'SUCCESS';
-  }
-
-  async fetchPendingSellers(ctx: RequestContext): Promise<CustomSeller[]> {
+  /**
+   * Fetches a list of pending sellers from the database.
+   *
+   * @param {RequestContext} ctx - The request context.
+   * @return {Promise<CustomSeller[]>} A promise that resolves to an array of CustomSeller objects representing the pending sellers.
+   */
+  async fetchPendingSellers(ctx: RequestContext): Promise<CustomSeller[] | []> {
     const adminCtx = await this.requestContextService.create({
       apiType: 'admin'
     });
-    return this.connection.getRepository(adminCtx, CustomSeller).find({
-      where: { status: 'pending' }
-    });
+
+    const sellers = await this.connection
+      .getRepository(adminCtx, CustomSeller)
+      .find({
+        where: { status: 'pending' }
+      });
+
+    for (const seller of sellers) {
+      if (seller.avatarId) {
+        const sellerAvatar = await this.assetService.findOne(
+          ctx,
+          seller.avatarId
+        );
+        if (sellerAvatar) {
+          seller.avatar = sellerAvatar;
+        }
+      }
+
+      if (seller.businessRegistrationFileId) {
+        const businessRegistrationFile = await this.assetService.findOne(
+          ctx,
+          seller.businessRegistrationFileId
+        );
+        if (businessRegistrationFile) {
+          seller.businessRegistrationFile = businessRegistrationFile;
+        }
+      }
+    }
+
+    return sellers;
   }
 
   /**
@@ -79,37 +86,40 @@ export class CustomSellerService {
     const seller = await this.connection
       .getRepository(adminCtx, CustomSeller)
       .findOne({
-        where: { id: Number(id) }
+        where: { id: id }
       });
 
     if (!seller) {
       throw new Error(`Seller with ID ${id} not found`);
     }
-    
+
     const password = generatePassword();
 
     let message: string;
     if (decision === 'approve') {
       // Trigger registration process for the seller
-     const createdSeller =  await this.multivendorService.registerNewSeller(ctx, {
-        shopName: seller.shopName,
-        seller: {
-          firstName: seller.fullName.split(' ')[0],
-          lastName: seller.fullName.split(' ')[1],
-          emailAddress: seller.emailAddress,
-          password: password
+      const createdSeller = await this.multivendorService.registerNewSeller(
+        ctx,
+        {
+          shopName: seller.shopName,
+          seller: {
+            firstName: seller.fullName.split(' ')[0],
+            lastName: seller.fullName.split(' ')[1],
+            emailAddress: seller.email,
+            password: password
+          }
         }
-      });
-       
+      );
+
       seller.status = 'approved';
-       message =`Your account has been approved. Welcome to our platform!` +
-      `You can login using your credentials.`+
-         `Username: ${seller.emailAddress} \n\n` +
-         `Temporary Password: ${password}  \n\n` +
-      `Please login using the provided credentials and reset your password.`;
-      
+      message =
+        `Your account has been approved. Welcome to our platform!` +
+        `You can login using your credentials.` +
+        `Username: ${seller.email} \n\n` +
+        `Temporary Password: ${password}  \n\n` +
+        `Please login using the provided credentials and reset your password.`;
+
       await this.smsService.sendSms(seller.phone, message);
-      console.log(createdSeller)
     } else if (decision === 'reject') {
       seller.status = 'rejected';
       message =
@@ -124,4 +134,41 @@ export class CustomSellerService {
     await this.connection.getRepository(adminCtx, CustomSeller).save(seller);
     return 'SUCCESS';
   }
+
+
+  async findSellerById(
+    ctx: RequestContext,
+    headers: Record<string, string | string[]>
+  ): Promise<CustomSeller | null> {
+    try {
+      const decodedToken = this.authMiddleware.verifyToken(headers);
+      if (!decodedToken || !decodedToken.id) {
+        console.error('Invalid or missing token');
+        return null;
+      }
+
+      const userId = decodedToken.id;
+      const userRepository = this.connection.getRepository(ctx, CustomSeller);
+      const seller = await userRepository.findOne({
+        where: { userId: userId },
+        relations: [
+          'productRequests',
+          'productRequests.productRequestImage'
+        ]
+      });
+
+      if (seller && seller.avatarId) {
+        const avatar = await this.assetService.findOne(ctx, seller.avatarId);
+        if (avatar) {
+          seller.avatar = avatar;
+        }
+      }
+
+      return seller;
+    } catch (error) {
+      console.error('Error finding customer by ID:', error);
+      return null;
+    }
+  }
+
 }

@@ -57,9 +57,13 @@ interface PendingSeller {
       width: 100%;
       border-collapse: collapse;
     }
-    th, td {
+    th {
       border: 1px solid #ddd;
-      padding: 8px;
+      padding: 10px;
+      text-align: left;
+    } 
+    td {
+      padding: 10px;
       text-align: left;
     }
   `]

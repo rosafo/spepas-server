@@ -4,8 +4,8 @@ export interface SellerInput {
     emailAddress: string;
     phone: string;
     TIN: string;
-    businessRegistratonFile?: any;
-    profilePicture?: any;
+    businessRegistrationFile: any;
+    profilePicture: any;
     shopAddress: string;
     aboutShop: string;
     password: string;

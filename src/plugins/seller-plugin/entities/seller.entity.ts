@@ -1,55 +1,50 @@
-import {
-    Entity,
-    PrimaryGeneratedColumn,
-    Column,
-    BaseEntity,
-    BeforeInsert
-} from 'typeorm';
-import * as bcrypt from 'bcrypt';
+import { Entity, Column, OneToMany, ManyToOne } from 'typeorm';
+import { DeepPartial, Asset, ID } from '@vendure/core';
+import { Offer } from '../../product-request-plugin/entities/offer.entity';
+import { Wallet } from '../../wallet-plugin/entities/wallet.entity';
+import { Transaction } from '../../wallet-plugin/entities/transaction.entity';
+import { RiderRequest } from '../../order-delivery-plugin/entities/request.entity';
+import { CustomUser } from '../../account-manager-plugin/entities/user.entity';
 
 @Entity()
-export class CustomSeller extends BaseEntity {
-    @PrimaryGeneratedColumn()
-    id: number;
+export class CustomSeller extends CustomUser {
+  constructor(input?: DeepPartial<CustomSeller>) {
+    super(input);
+  }
 
-    @Column({ length: 100 })
-    shopName: string;
+  @Column({ nullable: true })
+  userId: string;
 
-    @Column({ length: 100 })
-    fullName: string;
+  @Column({ length: 100 })
+  shopName: string;
 
-    @Column({ nullable: true })
-    emailAddress: string;
+  @Column({ length: 20 })
+  TIN: string;
 
-    @Column({ length: 15 })
-    phone: string;
+  @Column()
+  businessRegistrationFileId: ID;
 
-    @Column({ length: 20 })
-    TIN: string;
+  @Column({ length: 255 })
+  shopAddress: string;
 
-    @Column({ nullable: true })
-    businessRegistrationFile: string; 
+  @Column({ type: 'text' })
+  aboutShop: string;
 
-    @Column({ nullable: true })
-    profilePicture: string; 
+  @Column({ default: 'pending' })
+  status: string;
 
-    @Column({ length: 255 })
-    shopAddress: string;
+  @ManyToOne(() => Asset, { nullable: true })
+  businessRegistrationFile: Asset;
 
-    @Column({ type: 'text' })
-    aboutShop: string;
+  @OneToMany(() => Transaction, (transaction) => transaction.seller)
+  transactions: Transaction[];
 
-    @Column({ nullable: true })
-    password: string;
+  @ManyToOne(() => Wallet, (wallet) => wallet.seller)
+  wallet: Wallet;
 
-    @Column({ default: 'pending' }) 
-    status: string;
+  @OneToMany(() => Offer, (offer) => offer.seller)
+  offers: Offer[];
 
-    @BeforeInsert()
-    async hashPassword() {
-        if (this.password) {
-            const salt = await bcrypt.genSalt(10);
-            this.password = await bcrypt.hash(this.password, salt);
-        }
-    }
+  @OneToMany(() => RiderRequest, (request) => request.seller)
+  riderRequests: RiderRequest[];
 }

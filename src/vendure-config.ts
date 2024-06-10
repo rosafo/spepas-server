@@ -3,8 +3,7 @@ import {
   DefaultJobQueuePlugin,
   DefaultSearchPlugin,
   VendureConfig,
-  LanguageCode,
-  Asset
+  LanguageCode
 } from '@vendure/core';
 import { defaultEmailHandlers, EmailPlugin } from '@vendure/email-plugin';
 import { AssetServerPlugin } from '@vendure/asset-server-plugin';
@@ -12,32 +11,25 @@ import { AdminUiPlugin } from '@vendure/admin-ui-plugin';
 import 'dotenv/config';
 import path from 'path';
 import { AccountManagerPlugin } from './plugins/account-manager-plugin/account.manager.plugin';
-import { FacetSuggestionsPlugin } from '@pinelab/vendure-plugin-facet-suggestions';
-import { compileUiExtensions } from '@vendure/ui-devkit/compiler';
-import {
-  GoogleStoragePlugin,
-  GoogleStorageStrategy
-} from '@pinelab/vendure-plugin-google-storage-assets';
-import { GoogleAuthPlugin } from './plugins/google-auth/google-auth-plugin';
+import { CustomerPLugin } from './plugins/customer-plugin/customer.plugin';
+import { ProductRequestPlugin } from './plugins/product-request-plugin/product.request.plugin';
 import { MultivendorPlugin } from './plugins/multivendor-plugin/multivendor.plugin';
 import { SellerPlugin } from './plugins/seller-plugin/seller.plugin';
+import { WishlistPlugin } from './plugins/wishlist-plugin/wishlist.plugin';
+import { ReviewsPlugin } from './plugins/reviews/reviews-plugin';
+import { ReportPlugin } from './plugins/report-plugin/report.plugin';
+import { RiderPlugin } from './plugins/rider-plugin/rider.plugin';
+import { WalletPlugin } from './plugins/wallet-plugin/wallet.plugin';
+import { DeliveryPlugin } from './plugins/order-delivery-plugin/delivery.plugin';
 
+const IS_PROD = process.env.APP_ENV === 'prod';
 const IS_DEV = process.env.APP_ENV === 'dev';
-const googleClientId = process.env.GOOGLE_CLIENT_ID;
 
 export const config: VendureConfig = {
   apiOptions: {
-    port: 3000,
+    port: +(process.env.PORT || 3000),
     adminApiPath: 'admin-api',
     shopApiPath: 'shop-api',
-    // The following options are useful in development mode,
-    // but are best turned off for production for security
-    // reasons.
-    cors: {
-      origin: '*',
-      methods: 'GET, PUT, POST, DELETE',
-      credentials: true
-    },
     ...(IS_DEV
       ? {
           adminApiPlayground: {
@@ -63,40 +55,27 @@ export const config: VendureConfig = {
   },
   dbConnectionOptions: {
     type: 'postgres',
-    // See the README.md "Migrations" section for an explanation of
-    // the `synchronize` and `migrations` options.
-    synchronize: true,
+    synchronize: false,
     migrations: [path.join(__dirname, './migrations/*.+(js|ts)')],
     logging: false,
     database: process.env.DB_NAME,
     schema: process.env.DB_SCHEMA,
     host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT),
+    port: +process.env.DB_PORT,
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
-    ssl: true,
-    extra: {
-      ssl: {
-        rejectUnauthorized: true
-      }
-    }
+    ssl: true
   },
-
   paymentOptions: {
     paymentMethodHandlers: [dummyPaymentHandler]
   },
-  // When adding or altering custom field definitions, the database will
-  // need to be updated. See the "Migrations" section in README.md.
   customFields: {
     Product: [
       { name: 'Make', type: 'string' },
+      { name: 'Description', type: 'string' },
       { name: 'Model', type: 'string' },
       { name: 'Year', type: 'int' },
-      { name: 'numStars', type: 'int' },
-      { name: 'averageRating', type: 'float' },
       { name: 'CountryOfOrigin', type: 'string' },
-      { name: 'PiecesInStock', type: 'string' },
-      { name: 'Price', type: 'float' },
       {
         name: 'Condition',
         type: 'string',
@@ -115,48 +94,17 @@ export const config: VendureConfig = {
           }
         ]
       },
-
-      { name: 'isFavorite', type: 'boolean' }
-    ],
-    User: [
-      {
-        name: 'socialLoginToken',
-        type: 'string',
-        public: false
-      }
+      { name: 'Category', type: 'string' },
+      { name: 'Subcategory', type: 'string' }
     ]
   },
-    plugins: [
-    AssetServerPlugin.init({
-      storageStrategyFactory: () =>
-        new GoogleStorageStrategy({
-          bucketName: 'your-bucket-name',
-          thumbnails: {
-            width: 500,
-            height: 500
-          },
-          useAssetServerForAdminUi: false
-        }),
-      route: 'assets',
-      assetUploadDir: '/tmp/vendure/assets'
-    }),
-    GoogleStoragePlugin,
+  plugins: [
     AssetServerPlugin.init({
       route: 'assets',
       assetUploadDir: path.join(__dirname, '../static/assets'),
-      // For local dev, the correct value for assetUrlPrefix should
-      // be guessed correctly, but for production it will usually need
-      // to be set manually to match your production url.
       assetUrlPrefix: IS_DEV ? undefined : 'https://www.my-shop.com/assets/'
     }),
     DefaultJobQueuePlugin.init({ useDatabaseForBuffer: true }),
-    GoogleAuthPlugin.init({
-      clientId: googleClientId as string
-    }),
-    MultivendorPlugin.init({
-      platformFeePercent: 10,
-      platformFeeSKU: 'FEE'
-    }),
     DefaultSearchPlugin.init({ bufferUpdates: false, indexStockStatus: true }),
     EmailPlugin.init({
       devMode: true,
@@ -165,8 +113,6 @@ export const config: VendureConfig = {
       handlers: defaultEmailHandlers,
       templatePath: path.join(__dirname, '../static/email/templates'),
       globalTemplateVars: {
-        // The following variables will change depending on your storefront implementation.
-        // Here we are assuming a storefront running at http://localhost:8080.
         fromAddress: '"example" <noreply@example.com>',
         verifyEmailAddressUrl: 'http://localhost:8080/verify',
         passwordResetUrl: 'http://localhost:8080/password-reset',
@@ -174,15 +120,31 @@ export const config: VendureConfig = {
           'http://localhost:8080/verify-email-address-change'
       }
     }),
-    // FacetSuggestionsPlugin,
+    AccountManagerPlugin,
+    CustomerPLugin,
+    WishlistPlugin,
+    ProductRequestPlugin,
+    SellerPlugin,
+    MultivendorPlugin,
+    ReviewsPlugin,
+    ReportPlugin,
+    RiderPlugin,
+    WalletPlugin,
+    DeliveryPlugin,
     AdminUiPlugin.init({
       route: 'admin',
       port: 3002,
-      app: {
-         path: path.join(__dirname, '/admin-ui/dist'),
-      }
-    }),
-    AccountManagerPlugin,
-    SellerPlugin
+      adminUiConfig: {
+        apiHost: 'https://spepas-api-v1.onrender.com',
+        // apiHost:'http://localhost',
+        apiPort: 443,
+        brand: 'SpePas-Admin',
+        hideVendureBranding: true,
+        hideVersion: false
+      },
+      // app: {
+      //   path: path.join(__dirname, './admin-ui/src')
+      // }
+    })
   ]
 };
